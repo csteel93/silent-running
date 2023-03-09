@@ -146,5 +146,4 @@ public class SilentRunning extends ApplicationAdapter {
 
         universe.getSolarSystems().add(solarSystem);
     }
-
 }
