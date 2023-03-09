@@ -1,11 +1,16 @@
 package com.steel.silent;
 
+import box2dLight.RayHandler;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.ChainShape;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -14,6 +19,7 @@ import com.steel.silent.entity.Satellite;
 import com.steel.silent.map.SolarSystem;
 import com.steel.silent.simulation.Simulator;
 import com.steel.silent.simulation.Universe;
+import com.steel.silent.ui.UserInputProcessor;
 
 import java.util.List;
 
@@ -28,6 +34,9 @@ public class SilentRunning extends ApplicationAdapter {
 
     private OrthographicCamera hudCam;
     private ScreenViewport hudViewport;
+
+    private World world;
+    private RayHandler rayHandler;
 
     private final Universe universe = new Universe();
     private final Simulator simulator = new Simulator(universe);
@@ -52,6 +61,8 @@ public class SilentRunning extends ApplicationAdapter {
 
         renderer = new ShapeRenderer();
 
+        rayHandler = new RayHandler(world);
+
         populateUniverse();
 
         // begin rendering
@@ -63,6 +74,7 @@ public class SilentRunning extends ApplicationAdapter {
         System.out.println("starting simulation");
         final Thread simulation = new Thread(simulator);
         simulation.start();
+        Gdx.input.setInputProcessor(new UserInputProcessor());
         System.out.println("simulation started");
     }
 
@@ -90,6 +102,7 @@ public class SilentRunning extends ApplicationAdapter {
     }
 
     private void handleInput() {
+
         if (Gdx.input.isKeyPressed(Input.Keys.EQUALS)) {
             camera.zoom -= 0.02;
         }
@@ -123,7 +136,7 @@ public class SilentRunning extends ApplicationAdapter {
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, false);
-        hudViewport.update(width,height,false);
+        hudViewport.update(width, height, false);
     }
 
     @Override
@@ -146,5 +159,22 @@ public class SilentRunning extends ApplicationAdapter {
 
         universe.getSolarSystems().add(solarSystem);
     }
+
+//    private void createPhysicsWorld() {
+//        world = new World(new Vector2(0, 0), true);
+//        float halfWidth = universe_width / 2;
+//        ChainShape chainShape = new ChainShape();
+//        chainShape.createLoop(new Vector2[] {
+//                new Vector2(-halfWidth, 0f),
+//                new Vector2(halfWidth, 0f),
+//                new Vector2(halfWidth, universe_width),
+//                new Vector2(-halfWidth, universe_height) });
+//        BodyDef chainBodyDef = new BodyDef();
+//        chainBodyDef.type = BodyDef.BodyType.StaticBody;
+//        groundBody = world.createBody(chainBodyDef);
+//        groundBody.createFixture(chainShape, 0);
+//        chainShape.dispose();
+//        createBoxes();
+//    }
 
 }

@@ -1,5 +1,5 @@
 buildscript {
-    
+
 
     repositories {
         mavenLocal()
@@ -9,7 +9,7 @@ buildscript {
         google()
     }
     dependencies {
-        
+
 
     }
 }
@@ -19,6 +19,7 @@ plugins {
 }
 
 allprojects {
+    apply plugin: "java-library"
     apply plugin: "eclipse"
     apply plugin: "io.freefair.lombok"
 
@@ -31,6 +32,12 @@ allprojects {
         ashleyVersion = '1.7.4'
         aiVersion = '1.8.2'
         gdxControllersVersion = '2.2.1'
+    }
+
+    dependencies {
+        implementation group: 'log4j', name: 'log4j', version: '1.2.17'
+        implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+        implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.29'
     }
 
     repositories {
@@ -55,7 +62,6 @@ project(":desktop") {
         api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
-        
     }
 }
 
@@ -71,6 +77,5 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         api "com.badlogicgames.ashley:ashley:$ashleyVersion"
         api "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"
-        
     }
 }
