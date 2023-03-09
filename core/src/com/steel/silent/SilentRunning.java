@@ -87,7 +87,6 @@ public class SilentRunning extends ApplicationAdapter {
 
         // finalize rendering
         renderer.end();
-
     }
 
     private void handleInput() {
