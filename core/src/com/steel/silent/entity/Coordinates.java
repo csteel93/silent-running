@@ -1,33 +1,36 @@
 package com.steel.silent.entity;
 
-import lombok.Getter;
-
 import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Coordinates {
 
-    private AtomicReference<BigDecimal> xCoord;
-    private AtomicReference<BigDecimal> yCoord;
+    private final AtomicReference<BigDecimal> xCoord;
+    private final AtomicReference<BigDecimal> yCoord;
 
-    public Coordinates(final BigDecimal xCoord, final BigDecimal yCoord){
-        this.xCoord.set(xCoord);
-        this.yCoord.set(yCoord);
+    public Coordinates(final BigDecimal xCoord, final BigDecimal yCoord) {
+        this.xCoord = new AtomicReference<>(xCoord);
+        this.yCoord = new AtomicReference<>(yCoord);
     }
 
-    public void setXCoord(final BigDecimal newXCoord){
+    public void update(final BigDecimal newXCoord, final BigDecimal newYCoord) {
+        setXCoord(newXCoord);
+        setYCoord(newYCoord);
+    }
+
+    public void setXCoord(final BigDecimal newXCoord) {
         this.xCoord.set(newXCoord);
     }
 
-    public void setYCoord(final BigDecimal newYCoord){
+    public void setYCoord(final BigDecimal newYCoord) {
         this.yCoord.set(newYCoord);
     }
 
-    public BigDecimal getXCoord(){
+    public BigDecimal getXCoord() {
         return xCoord.get();
     }
 
-    public BigDecimal getYCoord(){
+    public BigDecimal getYCoord() {
         return yCoord.get();
     }
 }

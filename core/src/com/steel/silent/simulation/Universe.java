@@ -12,7 +12,7 @@ public class Universe {
 
     private final List<SolarSystem> solarSystems = new ArrayList<>();
 
-    public long update(final long previousTime){
+    public long update(final long previousTime) {
         final long updateTime = System.currentTimeMillis();
         final long deltaTime = updateTime - previousTime;
 

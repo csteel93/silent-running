@@ -1,10 +1,13 @@
 package com.steel.silent.ui;
 
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.steel.silent.ui.handler.key.KeyHandler;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,11 +21,11 @@ public class UserInputProcessor implements InputProcessor {
                 .collect(Collectors.toMap(KeyHandler::getKeycode, Function.identity()));
     }
 
-    public void handlePressedKeys(){
+    public void handlePressedKeys() {
         pressedKeys.forEach(keycode -> {
             final KeyHandler keyHandler = keyHandlers.get(keycode);
             keyHandler.handleKey();
-            if(!keyHandler.canHold()){
+            if (!keyHandler.canHold()) {
                 pressedKeys.remove(keycode);
             }
         });

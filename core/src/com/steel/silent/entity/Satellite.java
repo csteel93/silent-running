@@ -13,25 +13,40 @@ public class Satellite extends CelestialBody {
     private final BigDecimal orbitalRadius;
     @Getter
     private final BigDecimal orbitalSpeed;
-
     @Getter
-    private AtomicReference<BigDecimal> relativeAngle;
+    private final AtomicReference<BigDecimal> relativeAngle;
 
-    public Satellite(final CelestialBody focalPoint, final BigDecimal radius, final BigDecimal orbitalRadius, final BigDecimal orbitalSpeed) {
+    public Satellite(final CelestialBody focalPoint,
+                     final BigDecimal radius,
+                     final BigDecimal orbitalRadius,
+                     final BigDecimal orbitalSpeed,
+                     final double angle) {
+        super(initializeCoordinates(focalPoint, orbitalRadius, angle), radius);
         this.focalPoint = focalPoint;
         this.orbitalRadius = orbitalRadius;
         this.orbitalSpeed = orbitalSpeed;
-        this.radius = radius;
-        initializeCoordinates(focalPoint, orbitalRadius);
+        this.relativeAngle = new AtomicReference<>(BigDecimal.valueOf(angle));
     }
 
-    private void initializeCoordinates(final CelestialBody focalPoint, final BigDecimal orbitalRadius) {
-        final double randomAngle = Math.random() * Math.PI * 2;
-        final BigDecimal xOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.cos(randomAngle)));
-        final BigDecimal yOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.sin(randomAngle)));
-        this.xCoord = new AtomicReference<>(xOffset.add(focalPoint.getXCoord().get()));
-        this.yCoord = new AtomicReference<>(yOffset.add(focalPoint.getYCoord().get()));
-        this.relativeAngle = new AtomicReference<>(BigDecimal.valueOf(randomAngle));
+    public Satellite(final CelestialBody focalPoint,
+                     final BigDecimal radius,
+                     final BigDecimal orbitalRadius,
+                     final BigDecimal orbitalSpeed) {
+        this(focalPoint, radius, orbitalRadius, orbitalSpeed, randomAngle());
+    }
+
+    private static double randomAngle() {
+        return Math.random() * Math.PI * 2;
+    }
+
+    private static Coordinates initializeCoordinates(final CelestialBody focalPoint,
+                                                     final BigDecimal orbitalRadius,
+                                                     final double angle) {
+        final BigDecimal xOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.cos(angle)));
+        final BigDecimal yOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.sin(angle)));
+        final BigDecimal xCoord = xOffset.add(focalPoint.getCoordinates().getXCoord());
+        final BigDecimal yCoord = yOffset.add(focalPoint.getCoordinates().getYCoord());
+        return new Coordinates(xCoord, yCoord);
     }
 
 }

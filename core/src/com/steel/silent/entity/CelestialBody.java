@@ -5,31 +5,28 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
+@RequiredArgsConstructor
 public class CelestialBody {
 
     @Getter
     private final UUID id = UUID.randomUUID();
     @Getter
-    protected AtomicReference<BigDecimal> xCoord;
-    @Getter
-    protected AtomicReference<BigDecimal> yCoord;
-
-    protected BigDecimal radius;
-
+    private final Coordinates coordinates;
+    private final BigDecimal radius;
     @Getter
     @Setter
     protected Characteristics characteristics = new Characteristics();
 
     public void render(final ShapeRenderer renderer) {
         renderer.setColor(Color.valueOf(characteristics.getColor()));
-        renderer.circle(xCoord.get().floatValue(), yCoord.get().floatValue(), radius.floatValue(), 100);
+        renderer.circle(coordinates.getXCoord().floatValue(), coordinates.getYCoord().floatValue(), radius.floatValue(), 100);
     }
 
     @Override

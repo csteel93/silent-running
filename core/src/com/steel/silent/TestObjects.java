@@ -12,18 +12,17 @@ import java.util.List;
 public class TestObjects {
 
 
-
-    public static FocalPoint getFocalPoint(float scaled_width, float scaled_height){
+    public static FocalPoint getFocalPoint(float scaled_width, float scaled_height) {
         final FocalPoint sol = new FocalPoint(
-            bd(36),
-            bd(scaled_width).divide(bd(2), RoundingMode.UNNECESSARY),
-            bd(scaled_height).divide(bd(2), RoundingMode.UNNECESSARY));
+                bd(36),
+                bd(scaled_width).divide(bd(2), RoundingMode.UNNECESSARY),
+                bd(scaled_height).divide(bd(2), RoundingMode.UNNECESSARY));
         sol.getCharacteristics().setColor(Color.YELLOW.toString());
         sol.getCharacteristics().setName("Sol");
         return sol;
     }
 
-    public static List<Satellite> getSatellites(FocalPoint sol){
+    public static List<Satellite> getSatellites(FocalPoint sol) {
         final Satellite argon = new Satellite(sol, bd(10), bd(400), bd(100));
         argon.getCharacteristics().setColor(Color.BLUE.toString());
         argon.getCharacteristics().setName("Argon Prime");

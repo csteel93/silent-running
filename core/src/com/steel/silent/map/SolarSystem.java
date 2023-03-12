@@ -25,7 +25,7 @@ public class SolarSystem {
         this.satellites.put(focalPoint, new CopyOnWriteArrayList<>());
     }
 
-    public void withSatellites(final List<Satellite> satellites){
+    public void withSatellites(final List<Satellite> satellites) {
         satellites.forEach(this::withSatellite);
     }
 
@@ -36,20 +36,20 @@ public class SolarSystem {
 
     private void insertSatellite(final Satellite satellite) {
         final List<Satellite> children = satellites.keySet().stream()
-            .filter(celestialBody -> celestialBody instanceof Satellite)
-            .map(celestialBody -> (Satellite) celestialBody)
-            .filter(celestialBody -> celestialBody.getFocalPoint().getId().equals(satellite.getId()))
-            .collect(Collectors.toList());
+                .filter(celestialBody -> celestialBody instanceof Satellite)
+                .map(celestialBody -> (Satellite) celestialBody)
+                .filter(celestialBody -> celestialBody.getFocalPoint().getId().equals(satellite.getId()))
+                .collect(Collectors.toList());
         satellites.put(satellite, new CopyOnWriteArrayList<>(children));
     }
 
     private void appendFocalPoint(final Satellite satellite) {
         Optional.ofNullable(satellites.get(satellite.getFocalPoint()))
-            .ifPresent(children -> {
-                if (!children.contains(satellite)) {
-                    children.add(satellite);
-                }
-            });
+                .ifPresent(children -> {
+                    if (!children.contains(satellite)) {
+                        children.add(satellite);
+                    }
+                });
     }
 
     public void render(final ShapeRenderer renderer) {
@@ -58,52 +58,50 @@ public class SolarSystem {
     }
 
     public void update(final long deltaTime) {
-        Queue<Satellite> orderedSatellites = new LinkedList<>(satellites.get(focalPoint));
+        final Queue<Satellite> orderedSatellites = new LinkedList<>(satellites.get(focalPoint));
 
         while (!orderedSatellites.isEmpty()) {
-            Satellite satellite = orderedSatellites.poll();
+            final Satellite satellite = orderedSatellites.poll();
             orderedSatellites.addAll(satellites.get(satellite));
 
             orbit(satellite, deltaTime);
-
         }
     }
 
     private void orbit(final Satellite satellite,
                        final long delta) {
 
-        double updated_x_offset = satellite.getOrbitalRadius().doubleValue() * Math.cos(satellite.getRelativeAngle().get().doubleValue());
-        double updated_y_offset = satellite.getOrbitalRadius().doubleValue() * Math.sin(satellite.getRelativeAngle().get().doubleValue());
+        final double updated_x_offset = satellite.getOrbitalRadius().doubleValue() * Math.cos(satellite.getRelativeAngle().get().doubleValue());
+        final double updated_y_offset = satellite.getOrbitalRadius().doubleValue() * Math.sin(satellite.getRelativeAngle().get().doubleValue());
 
-        double updated_x = updated_x_offset + satellite.getFocalPoint().getXCoord().get().doubleValue();
-        double updated_y = updated_y_offset + satellite.getFocalPoint().getYCoord().get().doubleValue();
+        final double updated_x = updated_x_offset + satellite.getFocalPoint().getCoordinates().getXCoord().doubleValue();
+        final double updated_y = updated_y_offset + satellite.getFocalPoint().getCoordinates().getYCoord().doubleValue();
 
         // distance of one complete orbit
-        double orbitDistance = orbitDistance(satellite.getOrbitalRadius().floatValue());
+        final double orbitDistance = orbitDistance(satellite.getOrbitalRadius().floatValue());
 
         // length in time of full orbit
-        long orbitTimeMillis = Duration.ofSeconds(satellite.getOrbitalSpeed().longValue()).toMillis();
+        final long orbitTimeMillis = Duration.ofSeconds(satellite.getOrbitalSpeed().longValue()).toMillis();
 
         // speed travelled
-        double angularVelocity = orbitDistance / orbitTimeMillis;
+        final double angularVelocity = orbitDistance / orbitTimeMillis;
 
         // distance travelled in radians, angle covered
-        double radianDelta = angularVelocity * delta / 100;
+        final double radianDelta = angularVelocity * delta / 100;
 
-        double sin = Math.sin(radianDelta);
-        double cos = Math.cos(radianDelta);
+        final double sin = Math.sin(radianDelta);
+        final double cos = Math.cos(radianDelta);
 
-        double diff_x = updated_x - satellite.getFocalPoint().getXCoord().get().doubleValue();
-        double diff_y = updated_y - satellite.getFocalPoint().getYCoord().get().doubleValue();
+        final double diff_x = updated_x - satellite.getFocalPoint().getCoordinates().getXCoord().doubleValue();
+        final double diff_y = updated_y - satellite.getFocalPoint().getCoordinates().getYCoord().doubleValue();
 
-        double x_change = (diff_x * cos) - (diff_y * sin);
-        double y_change = (diff_x * sin) + (diff_y * cos);
+        final double x_change = (diff_x * cos) - (diff_y * sin);
+        final double y_change = (diff_x * sin) + (diff_y * cos);
 
-        double new_x = x_change + satellite.getFocalPoint().getXCoord().get().doubleValue();
-        double new_y = y_change + satellite.getFocalPoint().getYCoord().get().doubleValue();
+        final double new_x = x_change + satellite.getFocalPoint().getCoordinates().getXCoord().doubleValue();
+        final double new_y = y_change + satellite.getFocalPoint().getCoordinates().getYCoord().doubleValue();
 
-        satellite.getXCoord().set(new BigDecimal(new_x));
-        satellite.getYCoord().set(new BigDecimal(new_y));
+        satellite.getCoordinates().update(new BigDecimal(new_x), new BigDecimal(new_y));
         satellite.getRelativeAngle().getAndAccumulate(BigDecimal.valueOf(radianDelta), BigDecimal::add);
     }
 
