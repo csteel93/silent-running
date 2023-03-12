@@ -108,7 +108,6 @@ public class SilentRunning extends ApplicationAdapter {
 
     @Override
     public void dispose() {
-
         System.out.println("stopping simulation");
         simulator.stopSimulation();
 
