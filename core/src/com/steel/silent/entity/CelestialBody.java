@@ -29,7 +29,7 @@ public class CelestialBody {
 
     public void render(final ShapeRenderer renderer) {
         renderer.setColor(Color.valueOf(characteristics.getColor()));
-        renderer.circle(xCoord.get().floatValue(), yCoord.get().floatValue(), radius.floatValue());
+        renderer.circle(xCoord.get().floatValue(), yCoord.get().floatValue(), radius.floatValue(), 100);
     }
 
     @Override

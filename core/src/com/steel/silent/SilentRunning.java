@@ -14,6 +14,9 @@ import com.steel.silent.entity.Satellite;
 import com.steel.silent.map.SolarSystem;
 import com.steel.silent.simulation.Simulator;
 import com.steel.silent.simulation.Universe;
+import com.steel.silent.ui.UserInputConfigurations;
+import com.steel.silent.ui.UserInputProcessor;
+import com.steel.silent.ui.handler.KeyHandlerFactory;
 
 import java.util.List;
 
@@ -28,6 +31,8 @@ public class SilentRunning extends ApplicationAdapter {
 
     private OrthographicCamera hudCam;
     private ScreenViewport hudViewport;
+
+    private UserInputProcessor inputProcessor;
 
     private final Universe universe = new Universe();
     private final Simulator simulator = new Simulator(universe);
@@ -64,11 +69,17 @@ public class SilentRunning extends ApplicationAdapter {
         final Thread simulation = new Thread(simulator);
         simulation.start();
         System.out.println("simulation started");
+
+        final UserInputConfigurations uiConfig =
+                new UserInputConfigurations(3, 2);
+        inputProcessor = new UserInputProcessor(KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig));
+        Gdx.input.setInputProcessor(inputProcessor);
     }
 
     @Override
     public void render() {
-        handleInput();
+
+        inputProcessor.handlePressedKeys();
         camera.update();
         hudCam.update();
 
@@ -89,41 +100,10 @@ public class SilentRunning extends ApplicationAdapter {
         renderer.end();
     }
 
-    private void handleInput() {
-        if (Gdx.input.isKeyPressed(Input.Keys.EQUALS)) {
-            camera.zoom -= 0.02;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) {
-            camera.zoom += 0.02;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            camera.translate(-3, 0, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            camera.translate(3, 0, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            camera.translate(0, -3, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            camera.translate(0, 3, 0);
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            System.out.println();
-            System.out.println("VIEWPORT pos " + viewport.getScreenX() + " " + viewport.getScreenY());
-            System.out.println("VIEWPORT size " + viewport.getScreenWidth() + " " + viewport.getScreenHeight());
-            System.out.println("ZOOM          " + camera.zoom);
-            System.out.println("CAMERA        " + camera.viewportWidth + " " + camera.viewportHeight);
-            System.out.println("CAMERA   pos  " + camera.position.x + " " + camera.position.y);
-            System.out.println("GRAPHICS       " + Gdx.graphics.getHeight() + " " + Gdx.graphics.getHeight());
-            System.out.println();
-        }
-    }
-
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, false);
-        hudViewport.update(width,height,false);
+        hudViewport.update(width, height, false);
     }
 
     @Override
