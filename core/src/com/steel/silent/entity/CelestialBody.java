@@ -9,9 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.UUID;
 
+@EqualsAndHashCode(exclude = "coordinates")
 @RequiredArgsConstructor
 public class CelestialBody {
 
@@ -29,19 +29,6 @@ public class CelestialBody {
         renderer.circle(coordinates.getXCoord().floatValue(), coordinates.getYCoord().floatValue(), radius.floatValue(), 100);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CelestialBody that = (CelestialBody) o;
-        return id.equals(that.id) && radius.equals(that.radius) && characteristics.equals(that.characteristics);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, radius, characteristics);
-    }
-
     @Data
     @EqualsAndHashCode
     public static class Characteristics {
@@ -49,6 +36,5 @@ public class CelestialBody {
         private String classification;
         private String name;
         private String color;
-
     }
 }
