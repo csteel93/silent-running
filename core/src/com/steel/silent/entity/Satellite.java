@@ -19,6 +19,13 @@ public class Satellite extends CelestialBody {
     public Satellite(final CelestialBody focalPoint,
                      final BigDecimal radius,
                      final BigDecimal orbitalRadius,
+                     final BigDecimal orbitalSpeed) {
+        this(focalPoint, radius, orbitalRadius, orbitalSpeed, randomAngle());
+    }
+
+    public Satellite(final CelestialBody focalPoint,
+                     final BigDecimal radius,
+                     final BigDecimal orbitalRadius,
                      final BigDecimal orbitalSpeed,
                      final double angle) {
         super(initializeCoordinates(focalPoint, orbitalRadius, angle), radius);
@@ -26,13 +33,6 @@ public class Satellite extends CelestialBody {
         this.orbitalRadius = orbitalRadius;
         this.orbitalSpeed = orbitalSpeed;
         this.relativeAngle = new AtomicReference<>(BigDecimal.valueOf(angle));
-    }
-
-    public Satellite(final CelestialBody focalPoint,
-                     final BigDecimal radius,
-                     final BigDecimal orbitalRadius,
-                     final BigDecimal orbitalSpeed) {
-        this(focalPoint, radius, orbitalRadius, orbitalSpeed, randomAngle());
     }
 
     private static double randomAngle() {
