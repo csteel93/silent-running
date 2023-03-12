@@ -54,7 +54,6 @@ public class SilentRunning extends ApplicationAdapter {
         hudCam = new OrthographicCamera(universe_width, universe_height);
         hudCam.setToOrtho(false, universe_width, universe_height);
         hudViewport = new ScreenViewport(hudCam);
-
         renderer = new ShapeRenderer();
 
         populateUniverse();
