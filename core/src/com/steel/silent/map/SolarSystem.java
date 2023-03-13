@@ -36,20 +36,20 @@ public class SolarSystem {
 
     private void insertSatellite(final Satellite satellite) {
         final List<Satellite> children = satellites.keySet().stream()
-                .filter(celestialBody -> celestialBody instanceof Satellite)
-                .map(celestialBody -> (Satellite) celestialBody)
-                .filter(celestialBody -> celestialBody.getFocalPoint().getId().equals(satellite.getId()))
-                .collect(Collectors.toList());
+            .filter(celestialBody -> celestialBody instanceof Satellite)
+            .map(celestialBody -> (Satellite) celestialBody)
+            .filter(celestialBody -> celestialBody.getFocalPoint().getId().equals(satellite.getId()))
+            .collect(Collectors.toList());
         satellites.put(satellite, new CopyOnWriteArrayList<>(children));
     }
 
     private void appendFocalPoint(final Satellite satellite) {
         Optional.ofNullable(satellites.get(satellite.getFocalPoint()))
-                .ifPresent(children -> {
-                    if (!children.contains(satellite)) {
-                        children.add(satellite);
-                    }
-                });
+            .ifPresent(children -> {
+                if (!children.contains(satellite)) {
+                    children.add(satellite);
+                }
+            });
     }
 
     public void render(final ShapeRenderer renderer) {
@@ -57,19 +57,20 @@ public class SolarSystem {
         satellites.keySet().forEach(satellite -> satellite.render(renderer));
     }
 
-    public void update(final long deltaTime) {
+    public void update(final long deltaTime, final int speed) {
         final Queue<Satellite> orderedSatellites = new LinkedList<>(satellites.get(focalPoint));
 
         while (!orderedSatellites.isEmpty()) {
             final Satellite satellite = orderedSatellites.poll();
             orderedSatellites.addAll(satellites.get(satellite));
 
-            orbit(satellite, deltaTime);
+            orbit(satellite, deltaTime, speed);
         }
     }
 
     private void orbit(final Satellite satellite,
-                       final long delta) {
+                       final long delta,
+                       final int speed) {
 
         final double updated_x_offset = satellite.getOrbitalRadius().doubleValue() * Math.cos(satellite.getRelativeAngle().get().doubleValue());
         final double updated_y_offset = satellite.getOrbitalRadius().doubleValue() * Math.sin(satellite.getRelativeAngle().get().doubleValue());
@@ -87,7 +88,7 @@ public class SolarSystem {
         final double angularVelocity = orbitDistance / orbitTimeMillis;
 
         // distance travelled in radians, angle covered
-        final double radianDelta = angularVelocity * delta / 100;
+        final double radianDelta = (angularVelocity * delta / 2000) * speed;
 
         final double sin = Math.sin(radianDelta);
         final double cos = Math.cos(radianDelta);

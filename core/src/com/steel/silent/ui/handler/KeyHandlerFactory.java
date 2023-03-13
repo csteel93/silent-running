@@ -20,12 +20,12 @@ public class KeyHandlerFactory {
                                                   final ExtendViewport viewport,
                                                   final UserInputConfigurations uiConfig) {
         return Arrays.asList(spaceKeyHandler(camera, viewport),
-                upKeyHandler(uiConfig.getPanSpeed(), camera),
-                downKeyHandler(uiConfig.getPanSpeed(), camera),
-                leftKeyHandler(uiConfig.getPanSpeed(), camera),
-                rightKeyHandler(uiConfig.getPanSpeed(), camera),
-                zoomInKeyHandler(uiConfig.getZoomSpeed(), camera),
-                zoomOutKeyHandler(uiConfig.getZoomSpeed(), camera));
+            upKeyHandler(uiConfig.getPanSpeed(), camera),
+            downKeyHandler(uiConfig.getPanSpeed(), camera),
+            leftKeyHandler(uiConfig.getPanSpeed(), camera),
+            rightKeyHandler(uiConfig.getPanSpeed(), camera),
+            zoomInKeyHandler(uiConfig.getZoomSpeed(), camera),
+            zoomOutKeyHandler(uiConfig.getZoomSpeed(), camera));
     }
 
     public static KeyHandler spaceKeyHandler(final OrthographicCamera camera, final ExtendViewport viewport) {

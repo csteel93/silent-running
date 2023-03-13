@@ -14,9 +14,9 @@ public class TestObjects {
 
     public static FocalPoint getFocalPoint(float scaled_width, float scaled_height) {
         final FocalPoint sol = new FocalPoint(
-                bd(36),
-                bd(scaled_width).divide(bd(2), RoundingMode.UNNECESSARY),
-                bd(scaled_height).divide(bd(2), RoundingMode.UNNECESSARY));
+            bd(36),
+            bd(scaled_width).divide(bd(2), RoundingMode.UNNECESSARY),
+            bd(scaled_height).divide(bd(2), RoundingMode.UNNECESSARY));
         sol.getCharacteristics().setColor(Color.YELLOW.toString());
         sol.getCharacteristics().setName("Sol");
         return sol;
