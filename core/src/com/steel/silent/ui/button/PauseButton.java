@@ -33,6 +33,7 @@ public class PauseButton extends TextButton {
         setPosition(X_COORD, Y_COORD);
         setSize(WIDTH, HEIGHT);
         getStyle().fontColor = Color.BLACK;
+        setColor(Color.LIGHT_GRAY);
         addListener(interactionListener(simulation));
     }
 

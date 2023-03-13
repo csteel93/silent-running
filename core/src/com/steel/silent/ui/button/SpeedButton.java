@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -45,26 +44,26 @@ public class SpeedButton extends Group {
         increase.setPosition(Gdx.graphics.getWidth() - WIDTH, Gdx.graphics.getHeight() - HEIGHT);
         increase.addListener(interactionListener(simulation, 1));
         decrease = getButton(MINUS, drawable);
-        decrease.setPosition(Gdx.graphics.getWidth() - WIDTH * 2, Gdx.graphics.getHeight() - HEIGHT);
+        decrease.setPosition(Gdx.graphics.getWidth() - WIDTH * 3, Gdx.graphics.getHeight() - HEIGHT);
         decrease.addListener(interactionListener(simulation, -1));
 
         speedLabel = getSpeedLabel();
         currentSpeed = simulation.getSpeed();
         speedLabel.setText(currentSpeed);
 
+        addActor(speedLabel);
         addActor(increase);
         addActor(decrease);
-        addActor(speedLabel);
     }
 
     private Label getSpeedLabel() {
         final Pixmap pixmap = new Pixmap(WIDTH * 2, HEIGHT, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.WHITE);
+        pixmap.setColor(Color.LIGHT_GRAY);
         pixmap.fillRectangle(0, 0, pixmap.getWidth(), pixmap.getHeight());
         final LabelStyle style = new LabelStyle(new BitmapFont(), Color.BLACK);
         style.background = new TextureRegionDrawable(new Texture(pixmap));
         final Label label = new Label("0", style);
-        label.setPosition((Gdx.graphics.getWidth() / 2f) - WIDTH, Gdx.graphics.getHeight() - HEIGHT);
+        label.setPosition(Gdx.graphics.getWidth() - WIDTH * 2.5f, Gdx.graphics.getHeight() - HEIGHT);
         label.setAlignment(Align.center);
         return label;
     }
@@ -74,6 +73,7 @@ public class SpeedButton extends Group {
         final TextButton textButton = new TextButton(text, style);
         textButton.setSize(WIDTH, HEIGHT);
         textButton.getStyle().fontColor = Color.BLACK;
+        textButton.setColor(Color.LIGHT_GRAY);
         return textButton;
     }
 
