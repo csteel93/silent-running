@@ -5,32 +5,42 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Coordinates {
 
-    private final AtomicReference<BigDecimal> xCoord;
-    private final AtomicReference<BigDecimal> yCoord;
+    private final AtomicReference<BigDecimal> x;
+    private final AtomicReference<BigDecimal> y;
+    private final AtomicReference<BigDecimal> o;
 
-    public Coordinates(final BigDecimal xCoord, final BigDecimal yCoord) {
-        this.xCoord = new AtomicReference<>(xCoord);
-        this.yCoord = new AtomicReference<>(yCoord);
+    public Coordinates(final BigDecimal x, final BigDecimal y) {
+        this.x = new AtomicReference<>(x);
+        this.y = new AtomicReference<>(y);
+        this.o = new AtomicReference<>(BigDecimal.ZERO);
     }
 
-    public void update(final BigDecimal newXCoord, final BigDecimal newYCoord) {
-        setXCoord(newXCoord);
-        setYCoord(newYCoord);
+    public void update(final BigDecimal newX, final BigDecimal newY) {
+        setX(newX);
+        setY(newY);
     }
 
-    public void setXCoord(final BigDecimal newXCoord) {
-        this.xCoord.set(newXCoord);
+    public void setX(final BigDecimal newX) {
+        this.x.set(newX);
     }
 
-    public void setYCoord(final BigDecimal newYCoord) {
-        this.yCoord.set(newYCoord);
+    public void setY(final BigDecimal newY) {
+        this.y.set(newY);
     }
 
-    public BigDecimal getXCoord() {
-        return xCoord.get();
+    public void setO(final BigDecimal newO){
+        this.o.set(newO);
     }
 
-    public BigDecimal getYCoord() {
-        return yCoord.get();
+    public BigDecimal x() {
+        return x.get();
+    }
+
+    public BigDecimal y() {
+        return y.get();
+    }
+
+    public BigDecimal o(){
+        return o.get();
     }
 }

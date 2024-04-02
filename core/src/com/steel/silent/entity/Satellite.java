@@ -20,15 +20,16 @@ public class Satellite extends CelestialBody {
                      final BigDecimal radius,
                      final BigDecimal orbitalRadius,
                      final BigDecimal orbitalSpeed) {
-        this(focalPoint, radius, orbitalRadius, orbitalSpeed, randomAngle());
+        this(focalPoint, radius, orbitalRadius, orbitalSpeed, BigDecimal.ZERO, randomAngle());
     }
 
     public Satellite(final CelestialBody focalPoint,
                      final BigDecimal radius,
                      final BigDecimal orbitalRadius,
                      final BigDecimal orbitalSpeed,
+                     final BigDecimal rotationSpeed,
                      final double angle) {
-        super(initializeCoordinates(focalPoint, orbitalRadius, angle), radius);
+        super(initializeCoordinates(focalPoint, orbitalRadius, angle), radius, rotationSpeed);
         this.focalPoint = focalPoint;
         this.orbitalRadius = orbitalRadius;
         this.orbitalSpeed = orbitalSpeed;
@@ -44,9 +45,8 @@ public class Satellite extends CelestialBody {
                                                      final double angle) {
         final BigDecimal xOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.cos(angle)));
         final BigDecimal yOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.sin(angle)));
-        final BigDecimal xCoord = xOffset.add(focalPoint.getCoordinates().getXCoord());
-        final BigDecimal yCoord = yOffset.add(focalPoint.getCoordinates().getYCoord());
+        final BigDecimal xCoord = xOffset.add(focalPoint.getCoordinates().x());
+        final BigDecimal yCoord = yOffset.add(focalPoint.getCoordinates().y());
         return new Coordinates(xCoord, yCoord);
     }
-
 }

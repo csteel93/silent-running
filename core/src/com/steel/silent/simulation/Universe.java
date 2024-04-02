@@ -1,11 +1,12 @@
 package com.steel.silent.simulation;
 
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.steel.silent.entity.IdentifiableBody;
 import com.steel.silent.map.SolarSystem;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Data
 public class Universe {
@@ -21,8 +22,7 @@ public class Universe {
         return updateTime;
     }
 
-    public void render(final ShapeRenderer shapeRenderer) {
-        solarSystems.forEach(solarSystem -> solarSystem.render(shapeRenderer));
+    public Stream<IdentifiableBody> getState() {
+        return solarSystems.stream().flatMap(SolarSystem::getStateOfSolarSystem);
     }
-
 }
