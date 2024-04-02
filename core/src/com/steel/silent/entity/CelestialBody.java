@@ -1,19 +1,15 @@
 package com.steel.silent.entity;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @EqualsAndHashCode(exclude = "coordinates")
 @RequiredArgsConstructor
-public class CelestialBody {
+public class CelestialBody implements IdentifiableBody {
 
     @Getter
     private final UUID id = UUID.randomUUID();
@@ -21,20 +17,42 @@ public class CelestialBody {
     private final Coordinates coordinates;
     private final BigDecimal radius;
     @Getter
-    @Setter
+    private final BigDecimal rotationalSpeed;
+    @Getter
     protected Characteristics characteristics = new Characteristics();
 
-    public void render(final ShapeRenderer renderer) {
-        renderer.setColor(Color.valueOf(characteristics.getColor()));
-        renderer.circle(coordinates.getXCoord().floatValue(), coordinates.getYCoord().floatValue(), radius.floatValue(), 100);
+    @Override
+    public String name() {
+        return characteristics.getName();
     }
 
-    @Data
-    @EqualsAndHashCode
-    public static class Characteristics {
+    @Override
+    public String classification() {
+        return characteristics.getClassification();
+    }
 
-        private String classification;
-        private String name;
-        private String color;
+    @Override
+    public BigDecimal x() {
+        return coordinates.x();
+    }
+
+    @Override
+    public BigDecimal y() {
+        return coordinates.y();
+    }
+
+    @Override
+    public BigDecimal aspect() {
+        return coordinates.o();
+    }
+
+    @Override
+    public BigDecimal radius() {
+        return radius;
+    }
+
+    @Override
+    public String getColor() {
+        return characteristics.getColor();
     }
 }

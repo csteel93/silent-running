@@ -9,14 +9,14 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.KeyHandlerFactory;
 import com.steel.silent.ui.handler.key.ScrollHandler;
+import com.steel.silent.ui.renderers.UniverseRenderer;
 
 public class SkyMap {
 
     private final OrthographicCamera camera;
     private final ExtendViewport viewport;
-    private final ShapeRenderer renderer;
-    private final Universe universe;
     private final UserInputProcessor inputProcessor;
+    private final UniverseRenderer universeRenderer;
 
     public SkyMap(final float width, final float height, final Universe universe) {
         this(width, height, universe, new UserInputConfigurations(3, 2));
@@ -27,11 +27,10 @@ public class SkyMap {
         ortho.setToOrtho(false, width, height);
         this.camera = ortho;
         this.viewport = new ExtendViewport(width * 2, height * 2, this.camera);
-        this.renderer = new ShapeRenderer();
-        this.universe = universe;
         this.inputProcessor = new UserInputProcessor(
             KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig),
             new ScrollHandler(camera));
+        this.universeRenderer = new UniverseRenderer(universe, new ShapeRenderer());
     }
 
     public void registerInput(final InputMultiplexer multiplexer) {
@@ -41,12 +40,9 @@ public class SkyMap {
     public void render() {
         inputProcessor.handleInput();
         camera.update();
-        renderer.setProjectionMatrix(camera.combined);
         viewport.apply();
         ScreenUtils.clear(Color.BLACK);
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        universe.render(renderer);
-        renderer.end();
+        universeRenderer.render(camera.combined);
     }
 
     public void update(final int width, final int height) {
@@ -54,7 +50,6 @@ public class SkyMap {
     }
 
     public void dispose() {
-        renderer.dispose();
+        universeRenderer.dispose();
     }
-
 }
