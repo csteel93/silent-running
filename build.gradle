@@ -15,12 +15,11 @@ buildscript {
 }
 
 plugins {
-    id "io.freefair.lombok" version "6.5.0.2"
+    id "io.freefair.lombok" version "8.10" apply false
 }
 
 allprojects {
     apply plugin: "eclipse"
-    apply plugin: "io.freefair.lombok"
 
     version = '1.0'
     ext {
@@ -46,7 +45,13 @@ allprojects {
 
 project(":desktop") {
     apply plugin: "java-library"
+    apply plugin: "io.freefair.lombok"
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
     dependencies {
         implementation project(":core")
@@ -61,7 +66,13 @@ project(":desktop") {
 
 project(":core") {
     apply plugin: "java-library"
+    apply plugin: "io.freefair.lombok"
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
     dependencies {
         api "com.badlogicgames.gdx:gdx:$gdxVersion"
@@ -71,6 +82,6 @@ project(":core") {
         api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
         api "com.badlogicgames.ashley:ashley:$ashleyVersion"
         api "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"
-        implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
+        implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.14.0'
     }
 }

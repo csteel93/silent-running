@@ -1,7 +1,6 @@
-sourceCompatibility = 1.8
-dependencies {
-    implementation 'org.projectlombok:lombok:1.18.24'
-}
+// Lombok (compileOnly + annotationProcessor) is wired up automatically by the
+// io.freefair.lombok plugin applied in the root build.gradle.
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 sourceSets.main.java.srcDirs = [ "src/" ]

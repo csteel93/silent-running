@@ -5,10 +5,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Simulator implements Runnable {
 
+    private static final int MIN_SPEED_MULTIPLIER = 1;
+    private static final int MAX_SPEED_MULTIPLIER = 128;
+
     private final Universe universe;
     private final AtomicBoolean simulating = new AtomicBoolean(true);
     private final AtomicBoolean paused = new AtomicBoolean(false);
-    private final AtomicInteger speed = new AtomicInteger(1);
+    private final AtomicInteger speedMultiplier = new AtomicInteger(MIN_SPEED_MULTIPLIER);
 
     public Simulator(final Universe universe) {
         this.universe = universe;
@@ -22,7 +25,7 @@ public class Simulator implements Runnable {
         while (simulating.get()) {
             previousTime = paused.get()
                 ? System.currentTimeMillis()
-                : universe.update(previousTime, speed.get());
+                : universe.update(previousTime, speedMultiplier.get());
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -34,11 +37,19 @@ public class Simulator implements Runnable {
     }
 
     public int getSpeed() {
-        return speed.get();
+        return speedMultiplier.get();
     }
 
-    public int increaseSpeed(final int increase) {
-        return speed.accumulateAndGet(increase, (Integer::sum));
+    public int increaseSpeed(final int direction) {
+        return speedMultiplier.updateAndGet(current -> {
+            if (direction > 0) {
+                return Math.min(MAX_SPEED_MULTIPLIER, current * 2);
+            }
+            if (direction < 0) {
+                return Math.max(MIN_SPEED_MULTIPLIER, current / 2);
+            }
+            return current;
+        });
     }
 
     public void pause() {

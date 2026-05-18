@@ -18,8 +18,8 @@ public class Simulation {
         return simulator.getSpeed();
     }
 
-    public int increaseSpeed(final int amount){
-        return simulator.increaseSpeed(amount);
+    public int increaseSpeed(final int direction){
+        return simulator.increaseSpeed(direction);
     }
 
     public void pause() {

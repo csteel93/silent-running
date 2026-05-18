@@ -6,7 +6,6 @@ import com.steel.silent.entity.IdentifiableBody;
 import com.steel.silent.entity.Satellite;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -89,14 +88,12 @@ public class SolarSystem {
         final double updated_x = updated_x_offset + satellite.getFocalPoint().getCoordinates().x().doubleValue();
         final double updated_y = updated_y_offset + satellite.getFocalPoint().getCoordinates().y().doubleValue();
 
-        // distance of one complete orbit
-        final double orbitDistance = orbitDistance(satellite.getOrbitalRadius().floatValue());
-
-        // length in time of full orbit
-        final long orbitTimeMillis = Duration.ofSeconds(satellite.getOrbitalSpeed().longValue()).toMillis();
-
-        // speed travelled
-        final double angularVelocity = orbitDistance / orbitTimeMillis;
+        // Radians travelled per millisecond of simulation time.
+        final long orbitTimeMillis = satellite.getOrbitalSpeed().longValue();
+        if (orbitTimeMillis <= 0) {
+            return;
+        }
+        final double angularVelocity = (2.0 * Math.PI) / orbitTimeMillis;
 
         // distance travelled in radians, angle covered
         final double radianDelta = angularVelocity * delta * speed;
@@ -128,9 +125,5 @@ public class SolarSystem {
             final double newOrientation = rotationDelta + celestialBody.getCoordinates().o().doubleValue();
             celestialBody.getCoordinates().setO(BigDecimal.valueOf(newOrientation));
         }
-    }
-
-    private float orbitDistance(final float orbitRadius) {
-        return (float) (2 * Math.PI * orbitRadius);
     }
 }

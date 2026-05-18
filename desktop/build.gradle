@@ -1,4 +1,3 @@
-sourceCompatibility = 1.8
 sourceSets.main.java.srcDirs = [ "src/" ]
 sourceSets.main.resources.srcDirs = ["../assets"]
 
@@ -7,40 +6,43 @@ project.ext.assetsDir = new File("../assets")
 
 import org.gradle.internal.os.OperatingSystem
 
-task run(dependsOn: classes, type: JavaExec) {
-    main = project.mainClassName
+tasks.register('run', JavaExec) {
+    dependsOn classes
+    mainClass.set(project.mainClassName)
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
 
-    if (OperatingSystem.current() == OperatingSystem.MAC_OS) {
-        // Required to run on macOS
+    // Ensure macOS always starts JVM on the first thread (required by GLFW/LWJGL)
+    if (OperatingSystem.current() == OperatingSystem.MAC_OS || System.getProperty('os.name').toLowerCase().contains('mac')) {
         jvmArgs += "-XstartOnFirstThread"
     }
 }
 
-task debug(dependsOn: classes, type: JavaExec) {
-    main = project.mainClassName
+tasks.register('debug', JavaExec) {
+    dependsOn classes
+    mainClass.set(project.mainClassName)
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
     debug = true
+    if (OperatingSystem.current() == OperatingSystem.MAC_OS || System.getProperty('os.name').toLowerCase().contains('mac')) {
+        jvmArgs += "-XstartOnFirstThread"
+    }
 }
 
-task dist(type: Jar) {
+tasks.register('dist', Jar) {
+    dependsOn classes, configurations.runtimeClasspath
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
         attributes 'Main-Class': project.mainClassName
     }
-    dependsOn configurations.runtimeClasspath
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     with jar
 }
-
-dist.dependsOn classes
 
 eclipse.project.name = appName + "-desktop"

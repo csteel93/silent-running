@@ -49,7 +49,7 @@ public class SpeedButton extends Group {
 
         speedLabel = getSpeedLabel();
         currentSpeed = simulation.getSpeed();
-        speedLabel.setText(currentSpeed);
+        updateSpeedLabel();
 
         addActor(speedLabel);
         addActor(increase);
@@ -81,7 +81,7 @@ public class SpeedButton extends Group {
         return new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal(TEXTURE)), 12, 12, 12, 12));
     }
 
-    private EventListener interactionListener(final Simulation simulation, final int increase) {
+    private EventListener interactionListener(final Simulation simulation, final int direction) {
         return new InputListener() {
             @Override
             public void touchUp(final InputEvent event, final float x, final float y, final int pointer, final int button) {
@@ -89,10 +89,14 @@ public class SpeedButton extends Group {
 
             @Override
             public boolean touchDown(final InputEvent event, final float x, final float y, final int pointer, final int button) {
-                currentSpeed = simulation.increaseSpeed(increase);
-                speedLabel.setText(currentSpeed);
+                currentSpeed = simulation.increaseSpeed(direction);
+                updateSpeedLabel();
                 return true;
             }
         };
+    }
+
+    private void updateSpeedLabel() {
+        speedLabel.setText(currentSpeed + "x");
     }
 }

@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.steel.silent.entity.FocalPoint;
 import com.steel.silent.entity.Satellite;
+import com.steel.silent.entity.Ship;
 import com.steel.silent.map.SolarSystem;
 import com.steel.silent.simulation.Simulation;
 import com.steel.silent.simulation.Simulator;
@@ -22,9 +23,11 @@ public class SilentRunning extends ApplicationAdapter {
     private final Universe universe = new Universe();
     private final Simulator simulator = new Simulator(universe);
     private final Simulation simulation = new Simulation(simulator);
+    private final ShipConfigurations shipConfig = new ShipConfigurations();
 
     private SkyMap skyMap;
     private Gui gui;
+    private Ship testShip;
 
     public SilentRunning(final float width, final float height) {
         this.universe_width = width;
@@ -35,7 +38,7 @@ public class SilentRunning extends ApplicationAdapter {
     public void create() {
         populateUniverse();
 
-        skyMap = new SkyMap(universe_width, universe_height, universe);
+        skyMap = new SkyMap(universe_width, universe_height, universe, testShip);
         gui = new Gui(universe_width, universe_height, simulation);
 
         System.out.println("beginning rendering");
@@ -82,6 +85,10 @@ public class SilentRunning extends ApplicationAdapter {
         solarSystem.withSatellites(satellites);
 
         universe.getSolarSystems().add(solarSystem);
+
+        // Spawn a debug ship orbiting Phobos; press G in-game to command it.
+        testShip = TestObjects.getTestShip(satellites.get(5), shipConfig);
+        universe.getShips().add(testShip);
     }
 
 }

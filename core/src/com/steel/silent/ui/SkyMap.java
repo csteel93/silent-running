@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.steel.silent.entity.Ship;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.KeyHandlerFactory;
 import com.steel.silent.ui.handler.key.ScrollHandler;
@@ -19,17 +20,29 @@ public class SkyMap {
     private final UniverseRenderer universeRenderer;
 
     public SkyMap(final float width, final float height, final Universe universe) {
-        this(width, height, universe, new UserInputConfigurations(3, 2));
+        this(width, height, universe, null, new UserInputConfigurations(3, 2));
+    }
+
+    public SkyMap(final float width, final float height, final Universe universe, final Ship debugShip) {
+        this(width, height, universe, debugShip, new UserInputConfigurations(3, 2));
     }
 
     public SkyMap(final float width, final float height, final Universe universe, final UserInputConfigurations uiConfig) {
+        this(width, height, universe, null, uiConfig);
+    }
+
+    public SkyMap(final float width, final float height, final Universe universe, final Ship debugShip, final UserInputConfigurations uiConfig) {
         final OrthographicCamera ortho = new OrthographicCamera(width, height);
         ortho.setToOrtho(false, width, height);
         this.camera = ortho;
         this.viewport = new ExtendViewport(width * 2, height * 2, this.camera);
         this.inputProcessor = new UserInputProcessor(
-            KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig),
-            new ScrollHandler(camera));
+            KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig, debugShip, universe),
+            new ScrollHandler(camera),
+            camera,
+            viewport,
+            universe,
+            debugShip);
         this.universeRenderer = new UniverseRenderer(universe, new ShapeRenderer());
     }
 

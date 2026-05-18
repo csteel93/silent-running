@@ -1,6 +1,16 @@
 package com.steel.silent.ui;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.steel.silent.entity.CelestialBody;
+import com.steel.silent.entity.IdentifiableBody;
+import com.steel.silent.entity.Ship;
+import com.steel.silent.navigation.Navigator;
+import com.steel.silent.navigation.Trajectory;
+import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.key.KeyHandler;
 import com.steel.silent.ui.handler.key.ScrollHandler;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -18,16 +28,35 @@ import java.util.stream.Collectors;
 @SuppressWarnings("SuspiciousNameCombination")
 public class UserInputProcessor implements InputProcessor {
 
+    private static final float PICK_RADIUS_PIXELS = 12f;
+
     private final Map<Integer, KeyHandler> keyHandlers;
     private final Set<Integer> pressedKeys = new HashSet<>();
     private final Queue<ImmutablePair<Float, Float>> scrolls = new ArrayDeque<>();
     private final ScrollHandler scrollHandler;
+    private final OrthographicCamera camera;
+    private final ExtendViewport viewport;
+    private final Universe universe;
+    private Ship selectedShip;
 
     public UserInputProcessor(final List<KeyHandler> keyHandlers,
                               final ScrollHandler scrollHandler) {
+        this(keyHandlers, scrollHandler, null, null, null, null);
+    }
+
+    public UserInputProcessor(final List<KeyHandler> keyHandlers,
+                              final ScrollHandler scrollHandler,
+                              final OrthographicCamera camera,
+                              final ExtendViewport viewport,
+                              final Universe universe,
+                              final Ship initialShip) {
         this.keyHandlers = keyHandlers.stream()
             .collect(Collectors.toMap(KeyHandler::getKeycode, Function.identity()));
         this.scrollHandler = scrollHandler;
+        this.camera = camera;
+        this.viewport = viewport;
+        this.universe = universe;
+        this.selectedShip = initialShip;
     }
 
     public void handleInput() {
@@ -67,6 +96,22 @@ public class UserInputProcessor implements InputProcessor {
 
     @Override
     public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
+        if (button != Input.Buttons.LEFT || camera == null || viewport == null || universe == null) {
+            return false;
+        }
+        final Vector2 world = screenToWorld(screenX, screenY);
+
+        final Optional<Ship> ship = pickShip(world);
+        if (ship.isPresent()) {
+            selectedShip = ship.get();
+            System.out.printf("[point-click] selected ship %s%n", selectedShip.name());
+            return true;
+        }
+
+        final Optional<CelestialBody> destination = pickCelestialBody(world);
+        if (destination.isPresent()) {
+            return commandSelectedShip(destination.get());
+        }
         return false;
     }
 
@@ -84,5 +129,88 @@ public class UserInputProcessor implements InputProcessor {
     public boolean scrolled(final float amountX, final float amountY) {
         scrolls.add(ImmutablePair.of(amountX, amountY));
         return true;
+    }
+
+    private Vector2 screenToWorld(final int screenX, final int screenY) {
+        camera.update();
+        return viewport.unproject(new Vector2(screenX, screenY));
+    }
+
+    private Optional<Ship> pickShip(final Vector2 world) {
+        Ship closest = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (final Ship ship : universe.getShips()) {
+            final double distance = distanceTo(world, ship);
+            if (distance <= pickRadiusFor(ship) && distance < closestDistance) {
+                closest = ship;
+                closestDistance = distance;
+            }
+        }
+        return Optional.ofNullable(closest);
+    }
+
+    private Optional<CelestialBody> pickCelestialBody(final Vector2 world) {
+        CelestialBody closest = null;
+        double closestDistance = Double.MAX_VALUE;
+        for (final IdentifiableBody body : (Iterable<IdentifiableBody>) universe.getState()::iterator) {
+            if (body instanceof CelestialBody celestialBody && !(body instanceof Ship)) {
+                final double distance = distanceTo(world, celestialBody);
+                if (distance <= pickRadiusFor(celestialBody) && distance < closestDistance) {
+                    closest = celestialBody;
+                    closestDistance = distance;
+                }
+            }
+        }
+        return Optional.ofNullable(closest);
+    }
+
+    private boolean commandSelectedShip(final CelestialBody destination) {
+        final Ship ship = selectedShip != null ? selectedShip : singleShip();
+        if (ship == null) {
+            System.out.printf("[point-click] no ship selected for destination %s%n", destination.name());
+            return false;
+        }
+        if (destination.equals(ship.getParentBody())) {
+            System.out.printf("[point-click] %s is already orbiting %s%n", ship.name(), destination.name());
+            return true;
+        }
+
+        final Optional<Trajectory> plan = Navigator.route(ship, destination, universe, ship.getCruiseSpeed());
+        if (plan.isPresent()) {
+            ship.commandTrajectory(plan.get());
+            selectedShip = ship;
+            System.out.printf(
+                "[point-click] ship %s -> %s | %d legs, ETA sim+%d ms%n",
+                ship.name(),
+                destination.name(),
+                plan.get().getLegs().size(),
+                plan.get().arrivalSimTime() - universe.getSimTime());
+            return true;
+        }
+
+        System.out.printf("[point-click] no route from %s to %s%n",
+            ship.getParentBody() != null ? ship.getParentBody().name() : "?",
+            destination.name());
+        return true;
+    }
+
+    private Ship singleShip() {
+        return universe.getShips().size() == 1 ? universe.getShips().get(0) : null;
+    }
+
+    private double distanceTo(final Vector2 world, final IdentifiableBody body) {
+        final double dx = world.x - body.x().doubleValue();
+        final double dy = world.y - body.y().doubleValue();
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    private double pickRadiusFor(final IdentifiableBody body) {
+        return Math.max(body.radius().doubleValue(), screenPickRadiusWorld());
+    }
+
+    private double screenPickRadiusWorld() {
+        final Vector2 center = viewport.unproject(new Vector2(0, 0));
+        final Vector2 offset = viewport.unproject(new Vector2(PICK_RADIUS_PIXELS, 0));
+        return Math.abs(offset.x - center.x);
     }
 }
