@@ -1,6 +1,5 @@
 package com.steel.silent.entity;
 
-import com.steel.silent.simulation.OrbitalMechanics;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -20,13 +19,13 @@ public class Ship implements IdentifiableBody {
     private final BigDecimal radius;
     @Getter
     private final Characteristics characteristics = new Characteristics();
-
     @Getter
-    private final CelestialBody parentBody;
+    private final AtomicReference<CelestialBody> localBody;
     @Getter
-    private final BigDecimal orbitalRadius;
+    private final AtomicReference<BigDecimal> orbitalRadius;
     @Getter
-    private final BigDecimal orbitalPeriodSeconds;
+    private final AtomicReference<BigDecimal> orbitalPeriod;
+    @Getter
     private final AtomicReference<BigDecimal> relativeAngle = new AtomicReference<>(BigDecimal.ZERO);
 
     public Ship(final CelestialBody parent,
@@ -42,9 +41,9 @@ public class Ship implements IdentifiableBody {
                 final BigDecimal orbitalPeriodSeconds,
                 final double initialAngle) {
         this.radius = radius;
-        this.parentBody = parent;
-        this.orbitalRadius = orbitalRadius;
-        this.orbitalPeriodSeconds = orbitalPeriodSeconds;
+        this.localBody = new AtomicReference<>(parent);
+        this.orbitalRadius = new AtomicReference<>(orbitalRadius);
+        this.orbitalPeriod = new AtomicReference<>(orbitalPeriodSeconds);
         this.relativeAngle.set(BigDecimal.valueOf(initialAngle));
         final double x = parent.getCoordinates().x().doubleValue()
             + orbitalRadius.doubleValue() * Math.cos(initialAngle);
@@ -61,7 +60,7 @@ public class Ship implements IdentifiableBody {
     }
 
     private void updateOrbit(final long simDelta) {
-        final long orbitTimeMillis = Duration.ofSeconds(orbitalPeriodSeconds.longValue()).toMillis();
+        final long orbitTimeMillis = Duration.ofSeconds(orbitalPeriod.get().longValue()).toMillis();
         if (orbitTimeMillis <= 0) return;
         final double angularVelocity = (2.0 * Math.PI) / orbitTimeMillis;
         final double radianDelta = angularVelocity * simDelta;
@@ -69,25 +68,12 @@ public class Ship implements IdentifiableBody {
         final double newAngle = relativeAngle.get().doubleValue() + radianDelta;
         relativeAngle.set(BigDecimal.valueOf(newAngle));
 
-        final double cx = parentBody.getCoordinates().x().doubleValue();
-        final double cy = parentBody.getCoordinates().y().doubleValue();
-        final double r = orbitalRadius.doubleValue();
+        final double cx = localBody.get().getCoordinates().x().doubleValue();
+        final double cy = localBody.get().getCoordinates().y().doubleValue();
+        final double r = orbitalRadius.get().doubleValue();
         coordinates.update(
             BigDecimal.valueOf(cx + r * Math.cos(newAngle)),
             BigDecimal.valueOf(cy + r * Math.sin(newAngle)));
-    }
-
-    public OrbitalMechanics.Vec2 predictPosition(final long currentSim, final long targetSim) {
-        return predictOrbitPosition(currentSim, targetSim);
-    }
-
-    public OrbitalMechanics.Vec2 predictOrbitPosition(final long currentSim, final long targetSim) {
-        final OrbitalMechanics.Vec2 parentAt = OrbitalMechanics.predict(parentBody, currentSim, targetSim);
-        final long orbitTimeMillis = Duration.ofSeconds(orbitalPeriodSeconds.longValue()).toMillis();
-        final double omega = orbitTimeMillis > 0 ? (2.0 * Math.PI) / orbitTimeMillis : 0;
-        final double angle = relativeAngle.get().doubleValue() + omega * (targetSim - currentSim);
-        final double r = orbitalRadius.doubleValue();
-        return new OrbitalMechanics.Vec2(parentAt.x + r * Math.cos(angle), parentAt.y + r * Math.sin(angle));
     }
 
     @Override public String name() { return characteristics.getName(); }

@@ -27,10 +27,6 @@ public class TestObjects {
         sol.getCharacteristics().setName("Sol");
         sol.getCharacteristics().setClassification("STAR");
 
-        // Calibrate Sol's visualMu from Earth's orbit.
-        // final long earthPeriodMs = daysMs(365.256);
-        // sol.setVisualMu(OrbitalMechanics.muFromOrbit(ORBIT_STEP * 3, earthPeriodMs));
-
         return sol;
     }
 
@@ -43,12 +39,12 @@ public class TestObjects {
         final Satellite phobos  = moon(mars,  "Phobos",  Color.TAN,      2,  55,             0.31891);
         final Satellite deimos  = moon(mars,  "Deimos",  Color.SLATE,    2,  85,             1.26244);
 
-        // --- visualMu for parent bodies ---
-        // earth.setVisualMu(OrbitalMechanics.muFromOrbit(70,  daysMs(27.3217)));
-        // mars .setVisualMu(OrbitalMechanics.muFromOrbit(55,  daysMs(0.31891)));
-        calibrateLowOrbitMu(moon);
-        calibrateLowOrbitMu(phobos);
-        calibrateLowOrbitMu(deimos);
+        // // --- visualMu for parent bodies ---
+        // // earth.setVisualMu(OrbitalMechanics.muFromOrbit(70,  daysMs(27.3217)));
+        // // mars .setVisualMu(OrbitalMechanics.muFromOrbit(55,  daysMs(0.31891)));
+        // calibrateLowOrbitMu(moon);
+        // calibrateLowOrbitMu(phobos);
+        // calibrateLowOrbitMu(deimos);
 
         return Arrays.asList(mercury, venus, earth, moon, mars, phobos, deimos);
     }
@@ -59,7 +55,7 @@ public class TestObjects {
     public static Ship getTestShip(final CelestialBody parent) {
         final BigDecimal orbitalRadius  = parent.artificialSatelliteOrbitRadius();
         final BigDecimal periodSeconds  = shipOrbitalPeriodSeconds(parent, orbitalRadius);
-        final Ship ship = new Ship(parent, bd(4), orbitalRadius, periodSeconds);
+        final Ship ship = new Ship(parent, bd(1), orbitalRadius, periodSeconds);
         ship.getCharacteristics().setColor(Color.WHITE.toString());
         ship.getCharacteristics().setName("Wayfarer");
         ship.getCharacteristics().setClassification("SHIP");
@@ -112,6 +108,8 @@ public class TestObjects {
         planet.getCharacteristics().setColor(color.toString());
         planet.getCharacteristics().setName(name);
         planet.getCharacteristics().setClassification("PLANET");
+        System.out.println(planet.name() + " satellite radius: " + planet.artificialSatelliteOrbitRadius());
+        System.out.println(planet.name() + " influence radius: " + planet.influenceRadius());
         return planet;
     }
 

@@ -24,7 +24,7 @@ public class ShipRenderer implements EntityRenderer {
         shapeRenderer.setColor(safeColor(ship.getColor()));
         final float x = ship.x().floatValue();
         final float y = ship.y().floatValue();
-        final float r = Math.max(2f, ship.radius().floatValue());
+        final float r = Math.max(1f, ship.radius().floatValue());
         drawTriangle(x, y, r, FIXED_ORBIT_HEADING);
         shapeRenderer.end();
     }

@@ -54,7 +54,7 @@ public class SkyMap {
     public void focusOn(final CelestialBody body) {
         if (body == null) return;
         camera.position.set(body.x().floatValue(), body.y().floatValue(), 0f);
-        camera.zoom = Math.max(0.18f, Math.min(0.45f, body.radius().floatValue() / 28f));
+        camera.zoom = Math.max(0.05f, Math.min(0.45f, body.radius().floatValue() / 100f));
         camera.update();
     }
 

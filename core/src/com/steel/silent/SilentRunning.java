@@ -38,7 +38,7 @@ public class SilentRunning extends ApplicationAdapter {
         populateUniverse();
 
         skyMap = new SkyMap(universe_width, universe_height, universe, testShip);
-        gui = new Gui(universe_width, universe_height, simulation, universe, skyMap::focusOn);
+        gui = new Gui(universe_width, universe_height, simulation, universe, skyMap);
 
         System.out.println("beginning rendering");
         skyMap.render();

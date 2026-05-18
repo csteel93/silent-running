@@ -15,9 +15,9 @@ public class CelestialBody implements IdentifiableBody {
     private static final double DEFAULT_DENSITY = 1.0;
     private static final double INFLUENCE_SCALE = 2.0;
     private static final double MIN_INFLUENCE_RADIUS_MULTIPLIER = 3.0;
-    private static final double MAX_RENDERED_INFLUENCE_RADIUS = 280.0;
-    private static final double ARTIFICIAL_ORBIT_RADIUS_MULTIPLIER = 2.5;
-    private static final double ARTIFICIAL_ORBIT_CLEARANCE = 10.0;
+    private static final double MAX_RENDERED_INFLUENCE_RADIUS = 300.0;
+    private static final double ARTIFICIAL_ORBIT_RADIUS_MULTIPLIER = 1;
+    private static final double ARTIFICIAL_ORBIT_CLEARANCE = 5.0;
 
     @Getter
     private final UUID id = UUID.randomUUID();
@@ -52,15 +52,18 @@ public class CelestialBody implements IdentifiableBody {
     }
 
     public BigDecimal renderedInfluenceRadius() {
+        if ("MOON".equals(classification())){
+            return artificialSatelliteOrbitRadius();
+        }
         return BigDecimal.valueOf(Math.min(
             influenceRadius().doubleValue(),
             MAX_RENDERED_INFLUENCE_RADIUS));
     }
 
     public BigDecimal artificialSatelliteOrbitRadius() {
-        return BigDecimal.valueOf(
-            radius.doubleValue() * ARTIFICIAL_ORBIT_RADIUS_MULTIPLIER
-                + ARTIFICIAL_ORBIT_CLEARANCE);
+        final double satelliteRadius = radius.doubleValue() * ARTIFICIAL_ORBIT_RADIUS_MULTIPLIER
+                + ARTIFICIAL_ORBIT_CLEARANCE;
+        return BigDecimal.valueOf(satelliteRadius);
     }
 
     private static double estimateMass(final BigDecimal radius) {
