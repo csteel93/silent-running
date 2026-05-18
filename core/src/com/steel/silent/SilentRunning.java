@@ -23,7 +23,6 @@ public class SilentRunning extends ApplicationAdapter {
     private final Universe universe = new Universe();
     private final Simulator simulator = new Simulator(universe);
     private final Simulation simulation = new Simulation(simulator);
-    private final ShipConfigurations shipConfig = new ShipConfigurations();
 
     private SkyMap skyMap;
     private Gui gui;
@@ -39,7 +38,7 @@ public class SilentRunning extends ApplicationAdapter {
         populateUniverse();
 
         skyMap = new SkyMap(universe_width, universe_height, universe, testShip);
-        gui = new Gui(universe_width, universe_height, simulation);
+        gui = new Gui(universe_width, universe_height, simulation, universe, skyMap::focusOn);
 
         System.out.println("beginning rendering");
         skyMap.render();
@@ -87,7 +86,7 @@ public class SilentRunning extends ApplicationAdapter {
         universe.getSolarSystems().add(solarSystem);
 
         // Spawn a debug ship orbiting Phobos; press G in-game to command it.
-        testShip = TestObjects.getTestShip(satellites.get(5), shipConfig);
+        testShip = TestObjects.getTestShip(satellites.get(5));
         universe.getShips().add(testShip);
     }
 

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.steel.silent.entity.CelestialBody;
 import com.steel.silent.entity.Ship;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.KeyHandlerFactory;
@@ -37,7 +38,7 @@ public class SkyMap {
         this.camera = ortho;
         this.viewport = new ExtendViewport(width * 2, height * 2, this.camera);
         this.inputProcessor = new UserInputProcessor(
-            KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig, debugShip, universe),
+            KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig),
             new ScrollHandler(camera),
             camera,
             viewport,
@@ -48,6 +49,13 @@ public class SkyMap {
 
     public void registerInput(final InputMultiplexer multiplexer) {
         multiplexer.addProcessor(inputProcessor);
+    }
+
+    public void focusOn(final CelestialBody body) {
+        if (body == null) return;
+        camera.position.set(body.x().floatValue(), body.y().floatValue(), 0f);
+        camera.zoom = Math.max(0.18f, Math.min(0.45f, body.radius().floatValue() / 28f));
+        camera.update();
     }
 
     public void render() {

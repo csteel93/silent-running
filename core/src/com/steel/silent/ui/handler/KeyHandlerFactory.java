@@ -3,12 +3,9 @@ package com.steel.silent.ui.handler;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.steel.silent.entity.Ship;
-import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.UserInputConfigurations;
 import com.steel.silent.ui.handler.key.ArrowKeyHandler;
 import com.steel.silent.ui.handler.key.KeyHandler;
-import com.steel.silent.ui.handler.key.ShipCommandKeyHandler;
 import com.steel.silent.ui.handler.key.SpaceKeyHandler;
 import com.steel.silent.ui.handler.key.ZoomKeyHandler;
 
@@ -23,15 +20,7 @@ public class KeyHandlerFactory {
     public static List<KeyHandler> getKeyHandlers(final OrthographicCamera camera,
                                                   final ExtendViewport viewport,
                                                   final UserInputConfigurations uiConfig) {
-        return getKeyHandlers(camera, viewport, uiConfig, null, null);
-    }
-
-    public static List<KeyHandler> getKeyHandlers(final OrthographicCamera camera,
-                                                  final ExtendViewport viewport,
-                                                  final UserInputConfigurations uiConfig,
-                                                  final Ship debugShip,
-                                                  final Universe universe) {
-        final List<KeyHandler> handlers = new ArrayList<>(Arrays.asList(
+        return new ArrayList<>(Arrays.asList(
             spaceKeyHandler(camera, viewport),
             upKeyHandler(uiConfig.getPanSpeed(), camera),
             downKeyHandler(uiConfig.getPanSpeed(), camera),
@@ -39,10 +28,6 @@ public class KeyHandlerFactory {
             rightKeyHandler(uiConfig.getPanSpeed(), camera),
             zoomInKeyHandler(uiConfig.getZoomSpeed(), camera),
             zoomOutKeyHandler(uiConfig.getZoomSpeed(), camera)));
-        if (debugShip != null && universe != null) {
-            handlers.add(new ShipCommandKeyHandler(debugShip, universe, debugShip.getCruiseSpeed()));
-        }
-        return handlers;
     }
 
     public static KeyHandler spaceKeyHandler(final OrthographicCamera camera, final ExtendViewport viewport) {

@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Simulator implements Runnable {
 
     private static final int MIN_SPEED_MULTIPLIER = 1;
-    private static final int MAX_SPEED_MULTIPLIER = 128;
+    private static final int MAX_SPEED_MULTIPLIER = 512;
 
     private final Universe universe;
     private final AtomicBoolean simulating = new AtomicBoolean(true);
@@ -50,6 +50,10 @@ public class Simulator implements Runnable {
             }
             return current;
         });
+    }
+
+    public int maxSpeed() {
+        return speedMultiplier.updateAndGet(current -> MAX_SPEED_MULTIPLIER);
     }
 
     public void pause() {

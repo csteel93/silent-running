@@ -12,6 +12,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CelestialBody implements IdentifiableBody {
 
+    private static final double DEFAULT_DENSITY = 1.0;
+    private static final double INFLUENCE_SCALE = 2.0;
+    private static final double MIN_INFLUENCE_RADIUS_MULTIPLIER = 3.0;
+    private static final double MAX_RENDERED_INFLUENCE_RADIUS = 280.0;
+    private static final double ARTIFICIAL_ORBIT_RADIUS_MULTIPLIER = 2.5;
+    private static final double ARTIFICIAL_ORBIT_CLEARANCE = 10.0;
+
     @Getter
     private final UUID id = UUID.randomUUID();
     @Getter
@@ -23,20 +30,43 @@ public class CelestialBody implements IdentifiableBody {
     protected Characteristics characteristics = new Characteristics();
 
     /**
-     * Visual gravitational parameter (μ) used for Hohmann transfer calculations.
+     * Visual gravitational parameter (μ) for circular orbit timing.
      *
-     * This is not a real gravitational constant — it is a tunable simulation value
-     * calibrated so that Hohmann transfer times look believable at the simulation's
-     * time and distance scale.
-     *
-     * Use {@link com.steel.silent.simulation.OrbitalMechanics#muFromOrbit} to derive
-     * a consistent value from a known child satellite's orbital parameters.
-     *
-     * Default: 1 / (28^2) ≈ 0.00128, which matches the legacy hohmannTimeScale=28
-     * compression factor so existing timing is preserved when not explicitly set.
+     * This is a tunable simulation value, expressed in world-units^3/ms^2.
+     * Use {@link com.steel.silent.simulation.OrbitalMechanics#muFromOrbit} to
+     * derive a consistent value from a known orbit.
      */
     @Getter @Setter
     private double visualMu = 1.0 / (28.0 * 28.0);
+
+    public double getEstimatedMass() {
+        return estimateMass(radius);
+    }
+
+    public BigDecimal influenceRadius() {
+        final double radiusValue = radius.doubleValue();
+        final double influence = Math.max(
+            radiusValue * MIN_INFLUENCE_RADIUS_MULTIPLIER,
+            Math.sqrt(Math.max(0.0, getEstimatedMass())) * INFLUENCE_SCALE);
+        return BigDecimal.valueOf(influence);
+    }
+
+    public BigDecimal renderedInfluenceRadius() {
+        return BigDecimal.valueOf(Math.min(
+            influenceRadius().doubleValue(),
+            MAX_RENDERED_INFLUENCE_RADIUS));
+    }
+
+    public BigDecimal artificialSatelliteOrbitRadius() {
+        return BigDecimal.valueOf(
+            radius.doubleValue() * ARTIFICIAL_ORBIT_RADIUS_MULTIPLIER
+                + ARTIFICIAL_ORBIT_CLEARANCE);
+    }
+
+    private static double estimateMass(final BigDecimal radius) {
+        final double radiusValue = radius.doubleValue();
+        return (4.0 / 3.0) * Math.PI * radiusValue * radiusValue * radiusValue * DEFAULT_DENSITY;
+    }
 
     @Override
     public String name() {

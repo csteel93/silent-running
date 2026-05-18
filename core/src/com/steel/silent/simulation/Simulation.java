@@ -22,6 +22,10 @@ public class Simulation {
         return simulator.increaseSpeed(direction);
     }
 
+    public int maxSpeed() {
+        return simulator.maxSpeed();
+    }
+
     public void pause() {
         simulator.pause();
     }
