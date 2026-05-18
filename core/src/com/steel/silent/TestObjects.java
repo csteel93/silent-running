@@ -39,13 +39,6 @@ public class TestObjects {
         final Satellite phobos  = moon(mars,  "Phobos",  Color.TAN,      2,  55,             0.31891);
         final Satellite deimos  = moon(mars,  "Deimos",  Color.SLATE,    2,  85,             1.26244);
 
-        // // --- visualMu for parent bodies ---
-        // // earth.setVisualMu(OrbitalMechanics.muFromOrbit(70,  daysMs(27.3217)));
-        // // mars .setVisualMu(OrbitalMechanics.muFromOrbit(55,  daysMs(0.31891)));
-        // calibrateLowOrbitMu(moon);
-        // calibrateLowOrbitMu(phobos);
-        // calibrateLowOrbitMu(deimos);
-
         return Arrays.asList(mercury, venus, earth, moon, mars, phobos, deimos);
     }
 
@@ -70,23 +63,9 @@ public class TestObjects {
         return BigDecimal.valueOf(val);
     }
 
-    // private static long daysMs(final double days) {
-    //     return (long) (days * MILLIS_PER_ORBITAL_DAY);
-    // }
-
     private static BigDecimal days(final double days) {
         return bd(days * MILLIS_PER_ORBITAL_DAY);
     }
-
-    private static void calibrateLowOrbitMu(final Satellite body) {
-        // final double lowOrbitRadius = body.radius().doubleValue() * 2.5 + 10.0;
-        // final long lowOrbitPeriodMs = Duration.ofMinutes(lowOrbitPeriodMinutes(body)).toMillis();
-        // body.setVisualMu(OrbitalMechanics.muFromOrbit(lowOrbitRadius, lowOrbitPeriodMs));
-    }
-
-    // private static long lowOrbitPeriodMinutes(final CelestialBody body) {
-    //     return Math.round(55.0 + body.radius().doubleValue() * 18.0);
-    // }
 
     private static BigDecimal shipOrbitalPeriodSeconds(final CelestialBody parent,
                                                        final BigDecimal orbitalRadius) {
