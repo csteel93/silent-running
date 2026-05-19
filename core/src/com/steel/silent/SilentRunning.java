@@ -45,8 +45,7 @@ public class SilentRunning extends ApplicationAdapter {
 
         populateUniverse();
 
-        MapScale mapScale = MapScale.fromUniverse(universe, (double) universe_width, (double) universe_height,
-                bodyScale);
+        MapScale mapScale = MapScale.fromUniverse(universe, (double) universe_width, (double) universe_height, bodyScale);
 
         final List<ProjectedBody> bodies = universe.buildSnapshot().bodies().stream()
                 .map(body -> new ProjectedBody(body, mapScale))
