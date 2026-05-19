@@ -5,7 +5,6 @@ import java.util.List;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
-import com.steel.silent.simulation.snapshot.BodyState;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 /** Optional debug overlay for passive orbital context. */
@@ -14,7 +13,7 @@ public final class DebugOverlayRenderer {
     public static boolean enabled = readEnabledProperty();
 
     private static final int CIRCLE_STEPS = 48;
-    private static final Color OUTER_INFLUENCE_COLOR = new Color(0.8f, 0.5f, 0.1f, 0.35f);
+    private static final Color OUTER_INFLUENCE_COLOR = new Color(0.9f, 0.55f, 0.05f, 0.75f);
     private static final Color SATELLITE_ORBIT_COLOR = new Color(0.4f, 0.9f, 1.0f, 0.45f);
 
     private final ShapeRenderer shapeRenderer;
@@ -23,22 +22,37 @@ public final class DebugOverlayRenderer {
         this.shapeRenderer = shapeRenderer;
     }
 
-    public void render(final List<ProjectedBodyState> bodies, final Matrix4 projection) {
+    public void renderInfluenceRadii(final List<ProjectedBodyState> bodies, final Matrix4 projection) {
         shapeRenderer.setProjectionMatrix(projection);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        bodies.forEach(body -> {
-            drawCircle(
-                    (float) body.x(),
-                    (float) body.y(),
-                    (float) body.getEncounterRadius(),
-                    SATELLITE_ORBIT_COLOR);
-            drawCircle(
-                    (float) body.x(),
-                    (float) body.y(),
-                    (float) body.getInfluenceRadius(),
-                    OUTER_INFLUENCE_COLOR);
-        });
+        bodies.stream()
+                .filter(this::shouldDrawInfluenceRadius)
+                .forEach(body -> drawCircle(
+                        (float) body.x(),
+                        (float) body.y(),
+                        (float) body.getInfluenceRadius(),
+                        OUTER_INFLUENCE_COLOR));
         shapeRenderer.end();
+    }
+
+    public void renderDebugRings(final List<ProjectedBodyState> bodies, final Matrix4 projection) {
+        if (!enabled) {
+            return;
+        }
+        shapeRenderer.setProjectionMatrix(projection);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        bodies.stream()
+                .filter(this::shouldDrawInfluenceRadius)
+                .forEach(body -> drawCircle(
+                        (float) body.x(),
+                        (float) body.y(),
+                        (float) body.getEncounterRadius(),
+                        SATELLITE_ORBIT_COLOR));
+        shapeRenderer.end();
+    }
+
+    private boolean shouldDrawInfluenceRadius(final ProjectedBodyState body) {
+        return !"STAR".equals(body.classification());
     }
 
     private void drawCircle(final float cx, final float cy, final float r, final Color color) {
@@ -58,6 +72,6 @@ public final class DebugOverlayRenderer {
     }
 
     private static boolean readEnabledProperty() {
-        return "true".equalsIgnoreCase(System.getProperty("silent.debug.overlay", "false"));
+        return "true".equalsIgnoreCase(System.getProperty("silent.debug.overlay", "true"));
     }
 }

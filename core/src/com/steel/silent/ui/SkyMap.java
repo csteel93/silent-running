@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.steel.silent.debug.SimulationSnapshotWriter;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.simulation.snapshot.BodyState;
 import com.steel.silent.simulation.snapshot.SimulationSnapshot;
@@ -15,6 +16,7 @@ import com.steel.silent.ui.renderers.UniverseRenderer;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 import com.steel.silent.ui.renderers.viewProxies.WorldProjection;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +32,7 @@ public class SkyMap {
     private final UniverseRenderer universeRenderer;
     private final Universe universe;
     private final WorldProjection worldProjection;
+    private final SimulationSnapshotWriter snapshotWriter = new SimulationSnapshotWriter();
 
     public SkyMap(final float width, final float height, final Universe universe,
             final WorldProjection worldProjection) {
@@ -71,8 +74,9 @@ public class SkyMap {
     }
 
     private Optional<ProjectedBodyState> projectedBody(final SimulationSnapshot snapshot, final UUID bodyId) {
+        final Map<UUID, BodyState> bodiesById = snapshot.bodiesById();
         return Optional.ofNullable(snapshot.bodiesById().get(bodyId))
-                .map(body -> new ProjectedBodyState(body, worldProjection));
+                .map(body -> new ProjectedBodyState(body, worldProjection, bodiesById));
     }
 
     private void focusOnProjectedBody(final ProjectedBodyState body) {
@@ -87,7 +91,10 @@ public class SkyMap {
         viewport.apply();
         ScreenUtils.clear(Color.BLACK);
         universe.latestSnapshot()
-                .ifPresent(snapshot -> universeRenderer.render(snapshot, camera.combined, camera));
+                .ifPresent(snapshot -> {
+                    universeRenderer.render(snapshot, camera.combined, camera);
+                    snapshotWriter.writeIfDue(snapshot, System.currentTimeMillis(), worldProjection);
+                });
     }
 
     public void update(final int width, final int height) {

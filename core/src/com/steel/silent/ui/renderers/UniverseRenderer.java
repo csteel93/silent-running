@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.steel.silent.simulation.snapshot.BodyState;
 import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 import com.steel.silent.ui.renderers.viewProxies.WorldProjection;
@@ -35,8 +36,9 @@ public class UniverseRenderer {
             final Matrix4 projection,
             final OrthographicCamera camera) {
 
+        final Map<UUID, BodyState> bodiesById = snapshot.bodiesById();
         final List<ProjectedBodyState> bodies = snapshot.bodies().stream()
-                .map(body -> new ProjectedBodyState(body, worldProjection))
+                .map(body -> new ProjectedBodyState(body, worldProjection, bodiesById))
                 .toList();
 
         bodies.forEach(body -> {
@@ -45,11 +47,13 @@ public class UniverseRenderer {
             renderer.render(body, projection);
         });
 
+        debugOverlay.renderInfluenceRadii(bodies, projection);
+
         if (labelsVisible) {
             bodyLabelRenderer.render(camera, bodies);
         }
 
-        debugOverlay.render(bodies, projection);
+        debugOverlay.renderDebugRings(bodies, projection);
     }
 
     private EntityRenderer createRenderer(final ProjectedBodyState body) {

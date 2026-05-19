@@ -3,6 +3,7 @@ package com.steel.silent.ui.renderers.viewProxies;
 import java.util.Map;
 import java.util.UUID;
 
+import com.steel.silent.math.Vector;
 import com.steel.silent.simulation.snapshot.BodyState;
 
 /**
@@ -14,10 +15,18 @@ public class ProjectedBodyState {
 
     private final BodyState body;
     private final WorldProjection projection;
+    private final Map<UUID, BodyState> bodiesById;
 
     public ProjectedBodyState(final BodyState body, final WorldProjection projection) {
+        this(body, projection, Map.of());
+    }
+
+    public ProjectedBodyState(final BodyState body,
+            final WorldProjection projection,
+            final Map<UUID, BodyState> bodiesById) {
         this.body = body;
         this.projection = projection;
+        this.bodiesById = bodiesById;
     }
 
     public UUID id() {
@@ -34,12 +43,12 @@ public class ProjectedBodyState {
 
     /** Map-space x coordinate of this body's centre. */
     public double x() {
-        return projection.x(body.positionMeters().x());
+        return projectedPosition().x();
     }
 
     /** Map-space y coordinate of this body's centre. */
     public double y() {
-        return projection.y(body.positionMeters().y());
+        return projectedPosition().y();
     }
 
     /**
@@ -55,7 +64,7 @@ public class ProjectedBodyState {
      * as a true distance (no body exaggeration applied).
      */
     public double getInfluenceRadius() {
-        return projection.worldDistance(body.influenceRadius());
+        return projection.influenceRadius(body.influenceRadius(), body.radiusMeters());
     }
 
     /**
@@ -76,5 +85,38 @@ public class ProjectedBodyState {
 
     public BodyState bodyState() {
         return body;
+    }
+
+    private Vector projectedPosition() {
+        final UUID primaryBodyId = body.primaryBodyId();
+        if (primaryBodyId == null) {
+            return rawProjectedPosition(body);
+        }
+
+        final BodyState primary = bodiesById.get(primaryBodyId);
+        if (primary == null || "STAR".equals(primary.classification())) {
+            return rawProjectedPosition(body);
+        }
+
+        final Vector rawOffset = body.positionMeters().sub(primary.positionMeters());
+        final double rawDistanceMeters = rawOffset.len();
+        if (rawDistanceMeters == 0.0) {
+            return rawProjectedPosition(body);
+        }
+
+        final Vector primaryPosition = rawProjectedPosition(primary);
+        final Vector direction = rawOffset.nor();
+        final double visualDistance = projection.childOrbitDistance(
+                rawDistanceMeters,
+                primary.radiusMeters(),
+                body.radiusMeters());
+
+        return primaryPosition.add(direction.scl(visualDistance));
+    }
+
+    private Vector rawProjectedPosition(final BodyState state) {
+        return new Vector(
+                projection.x(state.positionMeters().x()),
+                projection.y(state.positionMeters().y()));
     }
 }

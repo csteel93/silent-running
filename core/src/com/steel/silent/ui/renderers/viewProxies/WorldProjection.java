@@ -22,13 +22,24 @@ public class WorldProjection {
      * Deimos) visible as selectable dots in the solar overview even when
      * their true projected size is well below 1 pixel.
      */
-    private static final double MIN_BODY_RADIUS = 2.0;
+    private static final double MIN_BODY_RADIUS = 0.2;
 
     /**
      * Maximum visual body radius in map units. Prevents the Sun from
      * dominating the view when body exaggeration is large.
      */
-    private static final double MAX_BODY_RADIUS = 40.0;
+    private static final double MAX_BODY_RADIUS = 20.0;
+
+    /**
+     * Display-only spacing for child orbits. Natural moon distances are often
+     * too small to read once the full solar system is fit into the map, so
+     * child systems get a local readability floor without changing their
+     * simulation positions.
+     */
+    private static final double CHILD_ORBIT_GAP = 12.0;
+    private static final double CHILD_ORBIT_LOG_SPACING = 14.0;
+    private static final double MIN_INFLUENCE_RADIUS_GAP = 3.0;
+    private static final double INFLUENCE_RADIUS_LOG_SPACING = 8.0;
 
     private final double centerX;
     private final double centerY;
@@ -87,13 +98,36 @@ public class WorldProjection {
         return meters / metersPerMapUnit;
     }
 
+    public double childOrbitDistance(final double rawDistanceMeters,
+            final double parentRadiusMeters,
+            final double childRadiusMeters) {
+        final double physicalDistance = worldDistance(rawDistanceMeters);
+        final double parentVisualRadius = bodyRadius(parentRadiusMeters);
+        final double childVisualRadius = bodyRadius(childRadiusMeters);
+        final double parentRelativeDistance = rawDistanceMeters / Math.max(1.0, parentRadiusMeters);
+        final double readableDistance = parentVisualRadius
+                + childVisualRadius
+                + CHILD_ORBIT_GAP
+                + Math.log10(parentRelativeDistance + 1.0) * CHILD_ORBIT_LOG_SPACING;
+        return Math.max(physicalDistance, readableDistance);
+    }
+
+    public double influenceRadius(final double influenceRadiusMeters, final double bodyRadiusMeters) {
+        final double physicalRadius = worldDistance(influenceRadiusMeters);
+        final double relativeInfluence = influenceRadiusMeters / Math.max(1.0, bodyRadiusMeters);
+        final double readableRadius = bodyRadius(bodyRadiusMeters)
+                + MIN_INFLUENCE_RADIUS_GAP
+                + Math.log10(Math.max(1.0, relativeInfluence)) * INFLUENCE_RADIUS_LOG_SPACING;
+        return Math.max(physicalRadius, readableRadius);
+    }
+
     /**
      * Projects a body radius (meters) to a visually exaggerated map-unit
      * radius. The result is clamped to [{@value #MIN_BODY_RADIUS},
      * {@value #MAX_BODY_RADIUS}] so every body remains visible and no single
      * body dominates the view.
      *
-     * <p>Intentional exaggeration: {@code bodyExaggeration} is typically 200×
+     * <p>Intentional exaggeration: {@code bodyExaggeration} is typically 60×
      * so planets subtend several map units instead of fractions of a pixel.
      * This is a display-only transform; simulation values are unchanged.</p>
      */

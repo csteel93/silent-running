@@ -37,7 +37,7 @@ public class SilentRunning extends ApplicationAdapter {
     @Override
     public void create() {
         // Body radii need visual exaggeration; orbital distances are scaled to the map size.
-        final double bodyExaggeration = 200.0;
+        final double bodyExaggeration = 60.0;
 
         populateUniverse();
 
