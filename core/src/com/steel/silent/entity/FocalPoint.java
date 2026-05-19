@@ -1,8 +1,16 @@
 package com.steel.silent.entity;
 
+import com.steel.silent.math.Vector;
+import com.steel.silent.model.body.CelestialBody;
+
 public class FocalPoint extends CelestialBody {
 
-    public FocalPoint(final double radius, final double xCoord, final double yCoord, final double mu, final double rotationSpeed) {
-        super(new Coordinates(xCoord, yCoord), radius, mu, rotationSpeed);
+    public FocalPoint(final double mu,
+            final double radiusMeters,
+            final Vector initialPositionMeters,
+            final double initialOrientationRadians,
+            final double rotationPeriodSeconds) {
+            super(mu, radiusMeters, initialPositionMeters, initialOrientationRadians, rotationPeriodSeconds);
     }
+
 }

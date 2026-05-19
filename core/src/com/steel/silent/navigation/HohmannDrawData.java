@@ -3,17 +3,18 @@ package com.steel.silent.navigation;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.steel.silent.entity.CelestialBody;
-import com.steel.silent.entity.Satellite;
-import com.steel.silent.ui.renderers.Vec2d;
+import com.steel.silent.math.Vector;
+import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.Satellite;
+import com.steel.silent.model.orbit.OrbitState;
 
 public record HohmannDrawData(
-           Vec2d sourceLaunchPosMeters,
-        Vec2d destinationArrivalPosMeters,
-        Vec2d expectedArrivalPosMeters,
-        Vec2d parentPosAtLaunchMeters,
-        Vec2d parentPosAtArrivalMeters,
-        List<Vec2d> transferPointsMeters) {
+           Vector sourceLaunchPosMeters,
+        Vector destinationArrivalPosMeters,
+        Vector expectedArrivalPosMeters,
+        Vector parentPosAtLaunchMeters,
+        Vector parentPosAtArrivalMeters,
+        List<Vector> transferPointsMeters) {
 
   public static HohmannDrawData buildHohmannDrawData(LaunchWindow window) {
     CelestialBody source = window.getSource();
@@ -23,22 +24,22 @@ public record HohmannDrawData(
     double launchTime = window.getLaunchTime();
     double arrivalTime = window.getArrivalTime();
 
-    Vec2d sourceLaunchPos =
-            source.getWorldPositionMeters(launchTime);
+    Vector sourceLaunchPos =
+            positionMeters(source, launchTime);
 
-    Vec2d destinationArrivalPos =
-            destination.getWorldPositionMeters(arrivalTime);
+    Vector destinationArrivalPos =
+            positionMeters(destination, arrivalTime);
 
-    Vec2d parentLaunchPos =
-            parent.getWorldPositionMeters(launchTime);
+    Vector parentLaunchPos =
+            positionMeters(parent, launchTime);
 
-    Vec2d parentArrivalPos =
-            parent.getWorldPositionMeters(arrivalTime);
+    Vector parentArrivalPos =
+            positionMeters(parent, arrivalTime);
 
-    Vec2d expectedArrivalPos =
+    Vector expectedArrivalPos =
             calculateExpectedArrivalPositionMeters(window);
 
-    List<Vec2d> transferPoints =
+    List<Vector> transferPoints =
             buildHohmannRoutePointsMeters(
                     window
             );
@@ -53,12 +54,12 @@ public record HohmannDrawData(
     );
 }
 
-    public static List<Vec2d> buildHohmannRoutePointsMeters(final LaunchWindow window) {
+    public static List<Vector> buildHohmannRoutePointsMeters(final LaunchWindow window) {
         Satellite source = window.getSource();
         Satellite destination = window.getDestination();
         CelestialBody parent = window.getParent();
-        double sourceRadius = source.getOrbitalRadius();
-        double destinationRadius = destination.getOrbitalRadius();
+        double sourceRadius = source.orbit().radiusMeters();
+        double destinationRadius = destination.orbit().radiusMeters();
         double semiMajorAxis = (sourceRadius + destinationRadius) * 0.5;
         double eccentricity = Math.abs(destinationRadius - sourceRadius)
                 / (sourceRadius + destinationRadius);
@@ -66,7 +67,7 @@ public record HohmannDrawData(
         boolean outward = destinationRadius > sourceRadius;
 
         int samples = 160;
-        List<Vec2d> points = new ArrayList<>(samples + 1);
+        List<Vector> points = new ArrayList<>(samples + 1);
 
         for (int i = 0; i <= samples; i++) {
             double t = i / (double) samples;
@@ -79,8 +80,8 @@ public record HohmannDrawData(
                     ? window.getSourceLaunchAngle() + trueAnomaly
                     : window.getSourceLaunchAngle() + trueAnomaly - Math.PI;
             double sampleTime = window.getLaunchTime() + t * window.getTransferTime();
-            Vec2d parentPosition = parent.getWorldPositionMeters(sampleTime);
-            points.add(new Vec2d(
+            Vector parentPosition = positionMeters(parent, sampleTime);
+            points.add(new Vector(
                     parentPosition.x() + transferRadius * Math.cos(worldAngle),
                     parentPosition.y() + transferRadius * Math.sin(worldAngle)));
         }
@@ -88,20 +89,27 @@ public record HohmannDrawData(
         return points;
     }
 
-    public static Vec2d calculateExpectedArrivalPositionMeters(
+    public static Vector calculateExpectedArrivalPositionMeters(
             LaunchWindow window) {
         Satellite destination = window.getDestination();
         CelestialBody parent = window.getParent();
 
-        Vec2d parentPositionAtArrival = parent.getWorldPositionMeters(window.getArrivalTime());
+        Vector parentPositionAtArrival = positionMeters(parent, window.getArrivalTime());
 
         double angle = window.getExpectedArrivalAngle();
 
-        Vec2d localArrivalOffset = new Vec2d(
-                Math.cos(angle) * destination.getOrbitalRadius(),
-                Math.sin(angle) * destination.getOrbitalRadius());
+        Vector localArrivalOffset = new Vector(
+                Math.cos(angle) * destination.orbit().radiusMeters(),
+                Math.sin(angle) * destination.orbit().radiusMeters());
 
         return parentPositionAtArrival.add(localArrivalOffset);
+    }
+
+    private static Vector positionMeters(final CelestialBody body, final double timeSeconds) {
+        if (body instanceof Satellite satellite) {
+            return satellite.orbit().stateAt(timeSeconds).positionMeters();
+        }
+        return OrbitState.stationary(body.initialPositionMeters()).positionMeters();
     }
 
 }

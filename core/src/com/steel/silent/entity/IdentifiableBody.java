@@ -1,19 +1,23 @@
 package com.steel.silent.entity;
 
+import com.steel.silent.math.Vector;
+
 public interface IdentifiableBody {
 
     String name();
 
     String classification();
 
-    double x();
+    // Vector intitialPositionVector();
 
-    double y();
+    // double initialPositionX();
 
-    double aspect();
+    // double initialPositionY();
 
-    double radius();
+    // double rotationPeriodSeconds();
 
-    String getColor();
+    // double radiusMeters();
+
+    String color();
 
 }

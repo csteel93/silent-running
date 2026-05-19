@@ -1,9 +1,11 @@
 package com.steel.silent.ui.renderers.viewProxies;
 
 import com.steel.silent.entity.IdentifiableBody;
-import com.steel.silent.entity.Satellite;
+import com.steel.silent.math.Vector;
+import com.steel.silent.model.body.Satellite;
 import com.steel.silent.simulation.Universe;
-import com.steel.silent.ui.renderers.Vec2d;
+import com.steel.silent.simulation.snapshot.BodyState;
+import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 
 import lombok.Getter;
 
@@ -30,12 +32,28 @@ public class MapScale {
         this.bodyScale = bodyScale;
     }
 
+    // public static MapScale fromSnapshot(final SimulationSnapshot snapshot,
+    //         final double mapWidth,
+    //         final double mapHeight,
+    //         final double bodyScale) {
+    //     final double mapRadius = Math.min(mapWidth, mapHeight) * MAP_FILL;
+    //     final double worldRadius = snapshot.bodies().stream()
+    //             .mapToDouble(MapScale::distanceFromOrigin)
+    //             .max()
+    //             .orElse(1.0);
+    //     return new MapScale(
+    //             mapWidth * 0.5,
+    //             mapHeight * 0.5,
+    //             Math.max(1.0, worldRadius / mapRadius),
+    //             bodyScale);
+    // }
+
     public static MapScale fromUniverse(final Universe universe,
             final double mapWidth,
             final double mapHeight,
             final double bodyScale) {
         final double mapRadius = Math.min(mapWidth, mapHeight) * MAP_FILL;
-        final double worldRadius = universe.getState()
+        final double worldRadius = universe.buildSnapshot().bodies().stream()
                 .mapToDouble(MapScale::distanceFromOrigin)
                 .max()
                 .orElse(1.0);
@@ -46,8 +64,8 @@ public class MapScale {
                 bodyScale);
     }
 
-    public Vec2d getCoordinates(final Vec2d coords) {
-        return new Vec2d(x(coords.x()), y(coords.y()));
+    public Vector getCoordinates(final Vector coords) {
+        return new Vector(x(coords.x()), y(coords.y()));
     }
 
     public double x(final double meters) {
@@ -58,45 +76,48 @@ public class MapScale {
         return centerY + meters / metersPerMapUnit;
     }
 
-    public double x(final Satellite satellite) {
-        return childCoordinate(satellite, true);
-    }
+    // public double x(final Satellite satellite) {
+    // return childCoordinate(satellite, true);
+    // }
 
-    public double y(final Satellite satellite) {
-        return childCoordinate(satellite, false);
-    }
+    // public double y(final Satellite satellite) {
+    // return childCoordinate(satellite, false);
+    // }
 
     public double radius(final double meters) {
         final double scaledRadius = meters / metersPerMapUnit * bodyScale;
         return Math.max(MIN_BODY_RADIUS, Math.min(MAX_BODY_RADIUS, scaledRadius));
     }
 
-    private static double distanceFromOrigin(final IdentifiableBody body) {
-        return Math.hypot(body.x(), body.y()) + body.radius();
+    private static double distanceFromOrigin(final BodyState body) {
+        return Math.hypot(body.positionMeters().x(), body.positionMeters().y()) + body.radiusMeters();
     }
 
-    private double childCoordinate(final Satellite satellite, final boolean xAxis) {
-        if ("STAR".equals(satellite.getFocalPoint().classification())) {
-            return xAxis ? x(satellite.x()) : y(satellite.y());
-        }
+    // private double childCoordinate(final Satellite satellite, final boolean
+    // xAxis) {
+    // if ("STAR".equals(satellite.getFocalPoint().classification())) {
+    // return xAxis ? x(satellite.initialPositionX()) :
+    // y(satellite.initialPositionY());
+    // }
 
-        final double parentX = satellite.getFocalPoint().x();
-        final double parentY = satellite.getFocalPoint().y();
-        final double dx = satellite.x() - parentX;
-        final double dy = satellite.y() - parentY;
-        final double realDistance = Math.hypot(dx, dy);
-        if (realDistance <= 0.0) {
-            return xAxis ? x(satellite.x()) : y(satellite.y());
-        }
+    // final double parentX = satellite.getFocalPoint().initialPositionX();
+    // final double parentY = satellite.getFocalPoint().initialPositionY();
+    // final double dx = satellite.initialPositionX() - parentX;
+    // final double dy = satellite.initialPositionY() - parentY;
+    // final double realDistance = Math.hypot(dx, dy);
+    // if (realDistance <= 0.0) {
+    // return xAxis ? x(satellite.initialPositionX()) :
+    // y(satellite.initialPositionY());
+    // }
 
-        final double scaledDistance = realDistance / metersPerMapUnit;
-        final double minDistance = radius(satellite.getFocalPoint().radius())
-                + radius(satellite.radius())
-                + MIN_CHILD_ORBIT_GAP;
-        final double visualDistance = Math.max(scaledDistance, minDistance);
-        final double parentMapX = x(parentX);
-        final double parentMapY = y(parentY);
-        final double offset = (xAxis ? dx : dy) / realDistance * visualDistance;
-        return (xAxis ? parentMapX : parentMapY) + offset;
-    }
+    // final double scaledDistance = realDistance / metersPerMapUnit;
+    // final double minDistance = radius(satellite.getFocalPoint().radiusMeters())
+    // + radius(satellite.radiusMeters())
+    // + MIN_CHILD_ORBIT_GAP;
+    // final double visualDistance = Math.max(scaledDistance, minDistance);
+    // final double parentMapX = x(parentX);
+    // final double parentMapY = y(parentY);
+    // final double offset = (xAxis ? dx : dy) / realDistance * visualDistance;
+    // return (xAxis ? parentMapX : parentMapY) + offset;
+    // }
 }

@@ -1,45 +1,84 @@
 package com.steel.silent.simulation;
 
-import com.steel.silent.entity.IdentifiableBody;
-import com.steel.silent.entity.Ship;
-import com.steel.silent.map.SolarSystem;
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
-@Data
+import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.Satellite;
+import com.steel.silent.model.orbit.OrbitState;
+import com.steel.silent.simulation.snapshot.BodyState;
+import com.steel.silent.simulation.snapshot.SimulationSnapshot;
+import com.steel.silent.simulation.snapshot.SnapshotPublisher;
+
 public class Universe {
 
     private final List<SolarSystem> solarSystems = new ArrayList<>();
-    private final List<Ship> ships = new CopyOnWriteArrayList<>();
-    private final AtomicLong simulationTime = new AtomicLong(0);
+    private final SnapshotPublisher snapshotPublisher = new SnapshotPublisher();
+
+    private final long epochMillis;
+    private final AtomicLong elapsedSimMillis = new AtomicLong(0);
+
+    public Universe() {
+        this(0L);
+    }
+
+    public Universe(final long epochMillis) {
+        this.epochMillis = epochMillis;
+    }
 
     public long update(final long previousTime, final int speed) {
-        final long updateTime = System.currentTimeMillis();
-        final long deltaTime = updateTime - previousTime;
-        final long simDelta = deltaTime * speed;
-
-        // Advance the global simulation clock so position prediction and ships use
-        // the same time base as orbital motion.
-        final long simTime = simulationTime.addAndGet(simDelta);
-
-        solarSystems.forEach(solarSystem -> solarSystem.update(deltaTime, speed));
-        ships.forEach(ship -> ship.update(simDelta, simTime));
-
-        return updateTime;
+        final long updatedMillis = System.currentTimeMillis();
+        final long realDeltaMillis = updatedMillis - previousTime;
+        final long simDeltaMillis = Math.round(realDeltaMillis * speed);
+        elapsedSimMillis.addAndGet(simDeltaMillis);
+        publishSnapshot();
+        return updatedMillis;
     }
 
-    public long getSimTime() {
-        return simulationTime.get();
+    public Optional<SimulationSnapshot> latestSnapshot() {
+        return snapshotPublisher.latest();
     }
 
-    public Stream<IdentifiableBody> getState() {
-        return Stream.concat(
-            solarSystems.stream().flatMap(SolarSystem::getStateOfSolarSystem),
-            ships.stream().map(s -> (IdentifiableBody) s));
+    public void publishSnapshot() {
+        snapshotPublisher.publish(buildSnapshot());
+    }
+
+    public SimulationSnapshot buildSnapshot() {
+        final long elapsedMillis = elapsedSimMillis.get();
+        final double simTimeSeconds = elapsedMillis / 1000.0;
+
+        final List<BodyState> states = solarSystems.stream()
+                .flatMap(SolarSystem::bodies)
+                .map(body -> toBodyState(body, simTimeSeconds))
+                .toList();
+
+        return new SimulationSnapshot(epochMillis, elapsedMillis, List.copyOf(states));
+    }
+
+    private BodyState toBodyState(final CelestialBody body, final double simTimeSeconds) {
+        final OrbitState orbitState = orbitStateFor(body, simTimeSeconds);
+
+        return new BodyState(
+                body.id(),
+                body.name(),
+                body.classification(),
+                orbitState.positionMeters(),
+                orbitState.velocityMetersPerSecond(),
+                body.orientationAt(simTimeSeconds),
+                body.radiusMeters(),
+                body.color());
+    }
+
+    private OrbitState orbitStateFor(final CelestialBody body, final double simTimeSeconds) {
+        if (body instanceof Satellite satellite) {
+            return satellite.orbit().stateAt(simTimeSeconds);
+        }
+        return OrbitState.stationary(body.initialPositionMeters());
+    }
+
+    public void withSolarSystem(final SolarSystem solarSystem) {
+        solarSystems.add(solarSystem);
     }
 }

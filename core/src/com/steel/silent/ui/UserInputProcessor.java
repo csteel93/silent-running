@@ -6,9 +6,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.steel.silent.entity.Ship;
+import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.key.KeyHandler;
 import com.steel.silent.ui.handler.key.ScrollHandler;
-import com.steel.silent.ui.renderers.viewProxies.VisibleUniverse;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -33,27 +33,24 @@ public class UserInputProcessor implements InputProcessor {
     private final ScrollHandler scrollHandler;
     private final OrthographicCamera camera;
     private final ExtendViewport viewport;
-    private final VisibleUniverse universe;
-    private Ship selectedShip;
+    private final Universe universe;
 
     public UserInputProcessor(final List<KeyHandler> keyHandlers,
                               final ScrollHandler scrollHandler) {
-        this(keyHandlers, scrollHandler, null, null, null, null);
+        this(keyHandlers, scrollHandler, null, null, null);
     }
 
     public UserInputProcessor(final List<KeyHandler> keyHandlers,
                               final ScrollHandler scrollHandler,
                               final OrthographicCamera camera,
                               final ExtendViewport viewport,
-                              final VisibleUniverse universe,
-                              final Ship initialShip) {
+                              final Universe universe) {
         this.keyHandlers = keyHandlers.stream()
             .collect(Collectors.toMap(KeyHandler::getKeycode, Function.identity()));
         this.scrollHandler = scrollHandler;
         this.camera = camera;
         this.viewport = viewport;
         this.universe = universe;
-        this.selectedShip = initialShip;
     }
 
     public void handleInput() {

@@ -1,4 +1,4 @@
-package com.steel.silent.entity;
+package com.steel.silent.model.body;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

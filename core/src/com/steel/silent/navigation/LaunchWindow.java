@@ -1,7 +1,7 @@
 package com.steel.silent.navigation;
 
-import com.steel.silent.entity.CelestialBody;
-import com.steel.silent.entity.Satellite;
+import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.Satellite;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

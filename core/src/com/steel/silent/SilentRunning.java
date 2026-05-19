@@ -4,14 +4,15 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.steel.silent.entity.FocalPoint;
-import com.steel.silent.entity.Satellite;
-import com.steel.silent.map.SolarSystem;
+import com.steel.silent.model.body.Satellite;
 import com.steel.silent.simulation.Simulation;
 import com.steel.silent.simulation.Simulator;
+import com.steel.silent.simulation.SolarSystem;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.Gui;
 import com.steel.silent.ui.SkyMap;
-import com.steel.silent.ui.renderers.viewProxies.VisibleUniverse;
+import com.steel.silent.ui.renderers.viewProxies.MapScale;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
 
 import java.util.List;
 
@@ -36,18 +37,23 @@ public class SilentRunning extends ApplicationAdapter {
     @Override
     public void create() {
 
-        // Body radii need visual exaggeration; orbital distances are scaled to the map size.
+        // Body radii need visual exaggeration; orbital distances are scaled to the map
+        // size.
         double bodyScale = 10.0;
         // 1 real second = 1 simulated day
         double timeScale = 86_400.0;
 
         populateUniverse();
 
-        final VisibleUniverse visibleUniverse = VisibleUniverse.fromUniverse(universe, universe_width, universe_height,
-                bodyScale, timeScale);
+        MapScale mapScale = MapScale.fromUniverse(universe, (double) universe_width, (double) universe_height,
+                bodyScale);
 
-        skyMap = new SkyMap(universe_width, universe_height, visibleUniverse);
-        gui = new Gui(universe_width, universe_height, simulation, visibleUniverse, skyMap);
+        final List<ProjectedBody> bodies = universe.buildSnapshot().bodies().stream()
+                .map(body -> new ProjectedBody(body, mapScale))
+                .toList();
+
+        skyMap = new SkyMap(universe_width, universe_height, universe, mapScale);
+        gui = new Gui(universe_width, universe_height, simulation, bodies, skyMap);
 
         System.out.println("beginning rendering");
         skyMap.render();
@@ -92,7 +98,7 @@ public class SilentRunning extends ApplicationAdapter {
         final SolarSystem solarSystem = new SolarSystem(sol);
         solarSystem.withSatellites(satellites);
 
-        universe.getSolarSystems().add(solarSystem);
+        universe.withSolarSystem(solarSystem);
 
         // Spawn a debug ship orbiting Phobos; press G in-game to command it.
         // testShip = TestObjects.getTestShip(satellites.get(5));

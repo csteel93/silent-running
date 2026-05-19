@@ -1,21 +1,42 @@
 package com.steel.silent.navigation;
 
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
-import com.steel.silent.entity.CelestialBody;
-import com.steel.silent.entity.Satellite;
+import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.Satellite;
+import com.steel.silent.model.orbit.OrbitState;
+import com.steel.silent.math.Vector;
+
+import static com.steel.silent.math.Angles.normalizeRadians;
+import static com.steel.silent.math.Angles.signedAangleDifferenceRadians;
 
 public class OrbitalMechanics {
+
+    /**
+     * Calculates the Hohmann transfer time given raw orbital radii and the
+     * gravitational parameter of the central body.
+     * <p>
+     * This overload accepts raw {@code double} values instead of {@link Satellite}
+     * objects, enabling use with synthetic orbits such as parking orbits that are
+     * not represented by a real {@link com.steel.silent.model.body.CelestialBody}.
+     *
+     * @param r1  start orbit radius in metres
+     * @param r2  end orbit radius in metres
+     * @param mu  gravitational parameter of the frame body (m³/s²)
+     * @return    transfer time in seconds (half the period of the transfer ellipse)
+     */
+    public static double calculateHohmannTransferTimeSeconds(double r1, double r2, double mu) {
+        double semiMajorAxis = (r1 + r2) * 0.5;
+        return Math.PI * Math.sqrt(semiMajorAxis * semiMajorAxis * semiMajorAxis / mu);
+    }
 
     public static double calculateTransferTime(final Satellite source, final Satellite destination) {
         // System.out.println("Transfer time between " + source.name() + " and " +
         //         destination.name());
 
-        final CelestialBody parent = source.getFocalPoint();
+        final CelestialBody parent = source.primary();
 
-        final double sourceRads = source.getOrbitalRadius();
-        final double destRads = destination.getOrbitalRadius();
-        final double mu = parent.getMu();
+        final double sourceRads = source.orbit().radiusMeters();
+        final double destRads = destination.orbit().radiusMeters();
+        final double mu = parent.mu();
 
         final double semiMajorAxis = (sourceRads + destRads) / 2.0;
         final double transferTimeSeconds = Math.PI * Math.sqrt(Math.pow(semiMajorAxis, 3.0) / mu);
@@ -36,10 +57,10 @@ public class OrbitalMechanics {
             Satellite source,
             Satellite destination,
             double earliestLaunchTimeSeconds) {
-        CelestialBody parent = source.getFocalPoint();
+        CelestialBody parent = source.primary();
 
         double transferTimeSeconds = calculateTransferTime(source, destination);
-        double destinationPeriodSeconds = (Math.PI * 2.0) / Math.abs(destination.getAngularVelocity());
+        double destinationPeriodSeconds = destination.orbit().periodSeconds();
 
         double searchStepSeconds = 3_600.0; // 1 hour
         double maxSearchTimeSeconds = destinationPeriodSeconds * 3.0;
@@ -54,10 +75,10 @@ public class OrbitalMechanics {
         for (double launchTime = searchStart; launchTime <= searchEnd; launchTime += searchStepSeconds) {
 
             double arrivalTime = launchTime + transferTimeSeconds;
-            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
-            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
-            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
-            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+            double sourceLaunchAngle = orbitAngleInPrimaryFrame(source, launchTime);
+            double expectedArrivalAngle = normalizeRadians(sourceLaunchAngle + Math.PI);
+            double destinationArrivalAngle = orbitAngleInPrimaryFrame(destination, arrivalTime);
+            double phaseError = signedAangleDifferenceRadians(expectedArrivalAngle, destinationArrivalAngle);
             double absError = Math.abs(phaseError);
 
             LaunchWindow candidate = new LaunchWindow(
@@ -95,10 +116,10 @@ public class OrbitalMechanics {
             double searchStepSeconds,
             double toleranceRad,
             double maxSearchPeriods) {
-        CelestialBody parent = source.getFocalPoint();
+        CelestialBody parent = source.primary();
 
         double transferTimeSeconds = calculateTransferTime(source, destination);
-        double destinationPeriodSeconds = (Math.PI * 2.0) / Math.abs(destination.getAngularVelocity());
+        double destinationPeriodSeconds = destination.orbit().periodSeconds();
 
         double maxSearchTimeSeconds = destinationPeriodSeconds * maxSearchPeriods;
 
@@ -111,10 +132,10 @@ public class OrbitalMechanics {
         for (double launchTime = searchStart; launchTime <= searchEnd; launchTime += searchStepSeconds) {
 
             double arrivalTime = launchTime + transferTimeSeconds;
-            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
-            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
-            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
-            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+            double sourceLaunchAngle = orbitAngleInPrimaryFrame(source, launchTime);
+            double expectedArrivalAngle = normalizeRadians(sourceLaunchAngle + Math.PI);
+            double destinationArrivalAngle = orbitAngleInPrimaryFrame(destination, arrivalTime);
+            double phaseError = signedAangleDifferenceRadians(expectedArrivalAngle, destinationArrivalAngle);
             double absError = Math.abs(phaseError);
 
             LaunchWindow candidate = new LaunchWindow(
@@ -152,7 +173,7 @@ public class OrbitalMechanics {
             double searchDurationSeconds,
             double searchStepSeconds,
             double toleranceRad) {
-        CelestialBody parent = source.getFocalPoint();
+        CelestialBody parent = source.primary();
 
         double transferTimeSeconds = calculateTransferTime(source, destination);
 
@@ -164,13 +185,13 @@ public class OrbitalMechanics {
         for (double launchTime = searchStartSeconds; launchTime <= searchEndSeconds; launchTime += searchStepSeconds) {
             double arrivalTime = launchTime + transferTimeSeconds;
 
-            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
+            double sourceLaunchAngle = orbitAngleInPrimaryFrame(source, launchTime);
 
-            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
+            double expectedArrivalAngle = normalizeRadians(sourceLaunchAngle + Math.PI);
 
-            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
+            double destinationArrivalAngle = orbitAngleInPrimaryFrame(destination, arrivalTime);
 
-            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+            double phaseError = signedAangleDifferenceRadians(expectedArrivalAngle, destinationArrivalAngle);
 
             double absError = Math.abs(phaseError);
 
@@ -220,20 +241,20 @@ public class OrbitalMechanics {
 
             double arrivalTime = launchTime + transferTimeSeconds;
 
-            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
+            double sourceLaunchAngle = orbitAngleInPrimaryFrame(source, launchTime);
 
-            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
+            double expectedArrivalAngle = normalizeRadians(sourceLaunchAngle + Math.PI);
 
-            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
+            double destinationArrivalAngle = orbitAngleInPrimaryFrame(destination, arrivalTime);
 
-            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+            double phaseError = signedAangleDifferenceRadians(expectedArrivalAngle, destinationArrivalAngle);
 
             double absError = Math.abs(phaseError);
 
             LaunchWindow candidate = new LaunchWindow(
                     source,
                     destination,
-                    source.getFocalPoint(),
+                    source.primary(),
                     launchTime,
                     arrivalTime,
                     transferTimeSeconds,
@@ -277,27 +298,45 @@ public class OrbitalMechanics {
         return refineLaunchWindowAround(source, destination, rough.getLaunchTime());
     }
 
-    public static double normalizeAngle(final double angle) {
-        final double twoPi = MathUtils.PI2;
-        double newAngle = angle % twoPi;
-        if (newAngle < 0) {
-            newAngle += twoPi;
-        }
-        return newAngle;
+    private static Vector positionMeters(final CelestialBody body, final double timeSeconds) {
+        return orbitStateFor(body, timeSeconds).positionMeters();
     }
+
+    private static OrbitState orbitStateFor(final CelestialBody body, final double timeSeconds) {
+        if (body instanceof Satellite satellite) {
+            return satellite.orbit().stateAt(timeSeconds);
+        }
+        return OrbitState.stationary(body.initialPositionMeters());
+    }
+
+    private static double orbitAngleInPrimaryFrame(final Satellite satellite, final double timeSeconds) {
+        final Vector satellitePosition = satellite.orbit().stateAt(timeSeconds).positionMeters();
+        final Vector primaryPosition = positionMeters(satellite.primary(), timeSeconds);
+        final Vector localPosition = satellitePosition.sub(primaryPosition);
+        return normalizeRadians(Math.atan2(localPosition.y(), localPosition.x()));
+    }
+
+    // public static double normalizeAngle(final double angle) {
+    //     final double twoPi = MathUtils.PI2;
+    //     double newAngle = angle % twoPi;
+    //     if (newAngle < 0) {
+    //         newAngle += twoPi;
+    //     }
+    //     return newAngle;
+    // }
 
     // public static float expectedArrivalAngle(final CelestialBody source,
     // final float launchTime) {
     // return normalizeAngle(launchTime);
     // }
 
-    public static double angleDifference(final double angle1, final double angle2) {
-        double difference = normalizeAngle(angle1 - angle2);
-        if (difference > MathUtils.PI) {
-            difference -= MathUtils.PI2;
-        }
-        return difference;
-    }
+    // public static double angleDifference(final double angle1, final double angle2) {
+    //     double difference = normalizeAngle(angle1 - angle2);
+    //     if (difference > MathUtils.PI) {
+    //         difference -= MathUtils.PI2;
+    //     }
+    //     return difference;
+    // }
 
     // public static HohmannDebugInfo buildHohmannDebugInfo(
     // LaunchWindow window,

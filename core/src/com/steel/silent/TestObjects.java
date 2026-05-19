@@ -2,10 +2,13 @@ package com.steel.silent;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
-import com.steel.silent.entity.CelestialBody;
 import com.steel.silent.entity.FocalPoint;
-import com.steel.silent.entity.Satellite;
 import com.steel.silent.entity.Ship;
+import com.steel.silent.math.Vector;
+import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.Satellite;
+import com.steel.silent.model.orbit.CircularOrbit;
+import com.steel.silent.model.orbit.Orbit;
 import com.steel.silent.navigation.LaunchWindow;
 import com.steel.silent.navigation.OrbitalMechanics;
 
@@ -28,15 +31,16 @@ public class TestObjects {
     // Duration.ofDays(1).toMillis();
 
     public static FocalPoint getFocalPoint(float scaled_width, float scaled_height) {
+
         final FocalPoint sol = new FocalPoint(
-                SUN_RADIUS,
-                0.0,
-                0.0,
                 SUN_MU,
+                SUN_RADIUS,
+                Vector.ZERO(),
+                Math.random() * Math.PI * 2,
                 SUN_ROTATION);
-        sol.getCharacteristics().setColor(Color.YELLOW.toString());
-        sol.getCharacteristics().setName("Sol");
-        sol.getCharacteristics().setClassification("STAR");
+        sol.characteristics().setColor(Color.YELLOW.toString());
+        sol.characteristics().setName("Sol");
+        sol.characteristics().setClassification("STAR");
 
         return sol;
     }
@@ -94,34 +98,34 @@ public class TestObjects {
 
         // OrbitalMechanics.calculateTransferTime(earth, mars);
 
-        double currentSimTimeSeconds = 0;
+        // double currentSimTimeSeconds = 0;
 
-        Instant start = Instant.now();
-        LaunchWindow window = OrbitalMechanics.findLaunchWindow(earth, mars, currentSimTimeSeconds);
-        Instant end = Instant.now();
-        Duration dur = Duration.between(start, end);
+        // Instant start = Instant.now();
+        // LaunchWindow window = OrbitalMechanics.findLaunchWindow(earth, mars, currentSimTimeSeconds);
+        // Instant end = Instant.now();
+        // Duration dur = Duration.between(start, end);
 
-        System.out.println("Launch Window Brute:");
-        System.out.println("  valid: " + window.isValid());
-        System.out.println("  launch time seconds: " + window.getLaunchTime());
-        System.out.println("  arrival time seconds: " + window.getArrivalTime());
-        System.out.println("  transfer time days: " + window.getTransferTime() / 86_400.0);
-        System.out.println("  phase error deg: " + Math.toDegrees(window.getPhaseError()));
-        System.out.println("  duration: " + dur);
+        // System.out.println("Launch Window Brute:");
+        // System.out.println("  valid: " + window.isValid());
+        // System.out.println("  launch time seconds: " + window.getLaunchTime());
+        // System.out.println("  arrival time seconds: " + window.getArrivalTime());
+        // System.out.println("  transfer time days: " + window.getTransferTime() / 86_400.0);
+        // System.out.println("  phase error deg: " + Math.toDegrees(window.getPhaseError()));
+        // System.out.println("  duration: " + dur);
 
-        Instant start2 = Instant.now();
+        // Instant start2 = Instant.now();
 
-        LaunchWindow window2 = OrbitalMechanics.findLaunchWindowTwoPass(earth, mars, currentSimTimeSeconds);
-        Instant end2 = Instant.now();
-        Duration dur2 = Duration.between(start2, end2);
+        // LaunchWindow window2 = OrbitalMechanics.findLaunchWindowTwoPass(earth, mars, currentSimTimeSeconds);
+        // Instant end2 = Instant.now();
+        // Duration dur2 = Duration.between(start2, end2);
 
-        System.out.println("Launch Window Refined:");
-        System.out.println("  valid: " + window2.isValid());
-        System.out.println("  launch time seconds: " + window2.getLaunchTime());
-        System.out.println("  arrival time seconds: " + window2.getArrivalTime());
-        System.out.println("  transfer time days: " + window2.getTransferTime() / 86_400.0);
-        System.out.println("  phase error deg: " + Math.toDegrees(window2.getPhaseError()));
-        System.out.println("  duration: " + dur2);
+        // System.out.println("Launch Window Refined:");
+        // System.out.println("  valid: " + window2.isValid());
+        // System.out.println("  launch time seconds: " + window2.getLaunchTime());
+        // System.out.println("  arrival time seconds: " + window2.getArrivalTime());
+        // System.out.println("  transfer time days: " + window2.getTransferTime() / 86_400.0);
+        // System.out.println("  phase error deg: " + Math.toDegrees(window2.getPhaseError()));
+        // System.out.println("  duration: " + dur2);
 
         return Arrays.asList(mercury, venus, earth, moon, mars, phobos, deimos);
     }
@@ -143,10 +147,6 @@ public class TestObjects {
     // -------------------------------------------------------------------------
     // Private factory helpers
     // -------------------------------------------------------------------------
-
-    private static BigDecimal bd(final double val) {
-        return BigDecimal.valueOf(val);
-    }
 
     // private static BigDecimal days(final double days) {
     // return bd(days * MILLIS_PER_ORBITAL_DAY);
@@ -170,24 +170,41 @@ public class TestObjects {
             final double mu,
             final double orbitalPeriodSeconds,
             final double rotationPeriodSeconds) {
-        final Satellite planet = new Satellite(sol,
-                radiusMeters, orbitalRadiusMeters,
-                orbitalPeriodSeconds, mu, rotationPeriodSeconds, Math.random() * Math.PI * 2);
-        planet.getCharacteristics().setColor(color.toString());
-        planet.getCharacteristics().setName(name);
-        planet.getCharacteristics().setClassification("PLANET");
-        // System.out.println("=  " + name);
-        // System.out.println(" - radius    " + radiusMeters);
+        final Orbit circularOrbit = new CircularOrbit(sol, orbitalRadiusMeters, orbitalPeriodSeconds);
+        final Vector initialPosition = initializeVector(sol, orbitalRadiusMeters, Math.random() * Math.PI * 2);
+        final Satellite planet = new Satellite(
+                circularOrbit,
+                mu,
+                radiusMeters,
+                initialPosition,
+                0.0,
+                rotationPeriodSeconds);
+        planet.characteristics().setColor(color.toString());
+        planet.characteristics().setName(name);
+        planet.characteristics().setClassification("PLANET");
+        // System.out.println("= " + name);
+        // System.out.println(" - radius " + radiusMeters);
         // System.out.println(" - influence " + planet.getInfluenceRadius());
-        // System.out.println(" - orbital   " + orbitalRadiusMeters);
-        // System.out.println(" - period    " + orbitalPeriodSeconds + " (seconds)");
-        // System.out.println(" - period    " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
+        // System.out.println(" - orbital " + orbitalRadiusMeters);
+        // System.out.println(" - period " + orbitalPeriodSeconds + " (seconds)");
+        // System.out.println(" - period " + orbitalPeriodSeconds / 60 / 60 + "
+        // (hours)");
 
         // System.out.println(planet.name() + " satellite radius: " +
         // planet.artificialSatelliteOrbitRadius());
         // System.out.println(planet.name() + " influence radius: " +
         // planet.influenceRadius());
         return planet;
+    }
+
+    private static Vector initializeVector(final CelestialBody primary,
+            final double orbitalRadius,
+            final double angle) {
+        final double xOffset = orbitalRadius * Math.cos(angle);
+        final double yOffset = orbitalRadius * Math.sin(angle);
+        final double xCoord = xOffset + primary.initialPositionMeters().x();
+        final double yCoord = yOffset + primary.initialPositionMeters().y();
+        return new Vector(xCoord, yCoord);
     }
 
     private static Satellite moon(final CelestialBody parent,
@@ -198,18 +215,27 @@ public class TestObjects {
             final double mu,
             final double orbitalPeriodSeconds,
             final double rotationPeriodSeconds) {
-        final Satellite moon = new Satellite(parent,
-                radiusMeters, orbitalRadiusMeters,
-                orbitalPeriodSeconds, mu, rotationPeriodSeconds, Math.random() * Math.PI * 2);
-        moon.getCharacteristics().setColor(color.toString());
-        moon.getCharacteristics().setName(name);
-        moon.getCharacteristics().setClassification("MOON");
 
-        // System.out.println("=  " + name);
-        // System.out.println(" - radius  " + radiusMeters);
+        final Orbit circularOrbit = new CircularOrbit(parent, orbitalRadiusMeters, orbitalPeriodSeconds);
+        final Vector initialPosition = initializeVector(parent, orbitalRadiusMeters, Math.random() * Math.PI * 2);
+
+        final Satellite moon = new Satellite(
+                circularOrbit,
+                mu,
+                radiusMeters,
+                initialPosition,
+                0.0,
+                rotationPeriodSeconds);
+        moon.characteristics().setColor(color.toString());
+        moon.characteristics().setName(name);
+        moon.characteristics().setClassification("MOON");
+
+        // System.out.println("= " + name);
+        // System.out.println(" - radius " + radiusMeters);
         // System.out.println(" - orbital " + orbitalRadiusMeters);
-        // System.out.println(" - period  " + orbitalPeriodSeconds + " (seconds)");
-        // System.out.println(" - period  " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
+        // System.out.println(" - period " + orbitalPeriodSeconds + " (seconds)");
+        // System.out.println(" - period " + orbitalPeriodSeconds / 60 / 60 + "
+        // (hours)");
         return moon;
     }
 }
