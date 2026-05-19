@@ -28,8 +28,9 @@ public class PlanetButton extends TextButton {
     private EventListener focusListener(final ProjectedBody body, final SkyMap map) {
         return new InputListener() {
             @Override
-            public boolean touchDown(final InputEvent event, final float x, final float y, final int pointer,
-                    final int button) {
+            public boolean touchDown(final InputEvent event, final float x, final float y,
+                    final int pointer, final int button) {
+                System.out.println("focusing on " + body.name() + " x: " + body.x() + " y: " + body.y());
                 map.focusOn(body);
                 return true;
             }
