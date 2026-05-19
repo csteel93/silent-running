@@ -11,7 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.steel.silent.ui.SkyMap;
-import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 public class PlanetButtons extends Group {
     private static final String STAR_CLASSIFICATION = "STAR";
@@ -19,7 +19,7 @@ public class PlanetButtons extends Group {
     private static final String MOON_CLASSIFICATION = "MOON";
     private static final List<String> INTERESTING_CLASSIFICATIONS = Arrays.asList(STAR_CLASSIFICATION,
             PLANET_CLASSIFICATION, MOON_CLASSIFICATION);
-    private static Predicate<ProjectedBody> BODY_OF_INTEREST = body -> INTERESTING_CLASSIFICATIONS
+    private static Predicate<ProjectedBodyState> BODY_OF_INTEREST = body -> INTERESTING_CLASSIFICATIONS
             .contains(body.classification());
 
     private static final String TEXTURE = "button.png";
@@ -28,14 +28,12 @@ public class PlanetButtons extends Group {
     private static final float PLANET_BUTTON_GAP = 12f;
     private static final float PLANET_BUTTON_TOP_MARGIN = 116f + 100;
 
-    public PlanetButtons(final List<ProjectedBody> bodies, final SkyMap map) {
+    public PlanetButtons(final List<ProjectedBodyState> bodies, final SkyMap map) {
         final Drawable drawable = getDrawable();
         final int[] index = { 0 };
         bodies.stream()
                 .filter(BODY_OF_INTEREST)
-                // .map(body -> (VisibleBody) body)
                 .forEach(body -> {
-                    // System.out.println("Generating zoom button for " + body.name());
                     final PlanetButton button = new PlanetButton(body, drawable, map);
                     button.setPosition(PLANET_BUTTON_X, getNextY(index[0]));
                     addActor(button);

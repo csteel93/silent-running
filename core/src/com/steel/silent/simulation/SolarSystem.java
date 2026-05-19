@@ -42,11 +42,6 @@ public class SolarSystem {
 
     public void withSatellites(final List<Satellite> satellites) {
         satellites.forEach(this::withSatellite);
-        System.out.println("result: ");
-        // satellitesByPrimary.forEach((k, v) -> {
-        //     System.out.println("parent: " + k.name());
-        //     System.out.println("satellites" + v.stream().map(Satellite::name).toList());
-        // });
     }
 
     public void withSatellite(final Satellite satellite) {
@@ -55,13 +50,11 @@ public class SolarSystem {
     }
 
     private void insertSatellite(final Satellite satellite) {
-        // System.out.println("inserting satellite: " + satellite.name());
         final List<Satellite> children = satellitesByPrimary.keySet().stream()
                 .filter(celestialBody -> celestialBody instanceof Satellite)
                 .map(celestialBody -> (Satellite) celestialBody)
                 .filter(celestialBody -> celestialBody.primary().id().equals(satellite.id()))
                 .collect(Collectors.toList());
-        // System.out.println("- found children: " + children.stream().map(Satellite::name).toList());
         satellitesByPrimary.put(satellite, new CopyOnWriteArrayList<>(children));
     }
 

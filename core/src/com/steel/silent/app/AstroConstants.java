@@ -1,4 +1,4 @@
-package com.steel.silent;
+package com.steel.silent.app;
 
 public class AstroConstants {
 
@@ -8,5 +8,5 @@ public class AstroConstants {
     public static double SUN_MU = 1.32712440041279419e20;
     // seconds
     public static double SUN_ROTATION = 2_113_920;
-    
+
 }

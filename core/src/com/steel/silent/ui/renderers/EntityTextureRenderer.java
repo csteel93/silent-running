@@ -5,7 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 public class EntityTextureRenderer implements EntityRenderer {
 
@@ -18,7 +18,7 @@ public class EntityTextureRenderer implements EntityRenderer {
     }
 
     @Override
-    public void render(final ProjectedBody body, Matrix4 projection) {
+    public void render(final ProjectedBodyState body, Matrix4 projection) {
         final float x = (float) body.x();
         final float y = (float) body.y();
         final float diameter = Math.max(0.01f, (float) body.radius() * 2f);

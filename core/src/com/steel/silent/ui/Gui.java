@@ -9,7 +9,7 @@ import com.steel.silent.ui.button.LabelToggleButton;
 import com.steel.silent.ui.button.PauseButton;
 import com.steel.silent.ui.button.PlanetButtons;
 import com.steel.silent.ui.button.SpeedButton;
-import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 public class Gui extends Layer {
 
@@ -19,14 +19,14 @@ public class Gui extends Layer {
 
     public Gui(final float width, final float height,
             final Simulation simulation,
-            final List<ProjectedBody> bodies,
+            final List<ProjectedBodyState> bodies,
             final SkyMap map) {
         this(new OrthographicCamera(width, height), simulation, bodies, map);
     }
 
     public Gui(final OrthographicCamera camera,
             final Simulation simulation,
-            final List<ProjectedBody> bodies,
+            final List<ProjectedBodyState> bodies,
             final SkyMap map) {
         super(new ScreenViewport(camera));
         camera.setToOrtho(false, camera.viewportWidth, camera.viewportHeight);

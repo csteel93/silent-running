@@ -8,7 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.steel.silent.ui.SkyMap;
-import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 import java.util.UUID;
 
@@ -16,7 +16,7 @@ public class PlanetButton extends TextButton {
     private static final float PLANET_BUTTON_WIDTH = 140f;
     private static final float PLANET_BUTTON_HEIGHT = 64f;
 
-    public PlanetButton(final ProjectedBody body,
+    public PlanetButton(final ProjectedBodyState body,
             final Drawable drawable,
             final SkyMap map) {
         super(body.name(), buttonStyle(drawable));

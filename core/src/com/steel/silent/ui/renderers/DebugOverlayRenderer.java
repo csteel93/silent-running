@@ -6,11 +6,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.steel.silent.simulation.snapshot.BodyState;
-import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
-/**
- * Optional debug overlay for passive orbital context.
-//  */
+/** Optional debug overlay for passive orbital context. */
 public final class DebugOverlayRenderer {
 
     public static boolean enabled = readEnabledProperty();
@@ -25,22 +23,20 @@ public final class DebugOverlayRenderer {
         this.shapeRenderer = shapeRenderer;
     }
 
-    public void render(final List<ProjectedBody> bodies, final Matrix4 projection) {
+    public void render(final List<ProjectedBodyState> bodies, final Matrix4 projection) {
         shapeRenderer.setProjectionMatrix(projection);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         bodies.forEach(body -> {
-            if (body instanceof final ProjectedBody projectedBody) {
-                drawCircle(
-                        (float) projectedBody.x(),
-                        (float) projectedBody.y(),
-                        (float) projectedBody.getEncounterRadius(),
-                        SATELLITE_ORBIT_COLOR);
-                drawCircle(
-                        (float) projectedBody.x(),
-                        (float) projectedBody.y(),
-                        (float) projectedBody.getInfluenceRadius(),
-                        OUTER_INFLUENCE_COLOR);
-            }
+            drawCircle(
+                    (float) body.x(),
+                    (float) body.y(),
+                    (float) body.getEncounterRadius(),
+                    SATELLITE_ORBIT_COLOR);
+            drawCircle(
+                    (float) body.x(),
+                    (float) body.y(),
+                    (float) body.getInfluenceRadius(),
+                    OUTER_INFLUENCE_COLOR);
         });
         shapeRenderer.end();
     }

@@ -1,11 +1,8 @@
 package com.steel.silent.ui;
 
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.steel.silent.entity.Ship;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.key.KeyHandler;
 import com.steel.silent.ui.handler.key.ScrollHandler;
@@ -24,8 +21,6 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("SuspiciousNameCombination")
 public class UserInputProcessor implements InputProcessor {
-
-    private static final float PICK_RADIUS_PIXELS = 12f;
 
     private final Map<Integer, KeyHandler> keyHandlers;
     private final Set<Integer> pressedKeys = new HashSet<>();
@@ -90,20 +85,6 @@ public class UserInputProcessor implements InputProcessor {
 
     @Override
     public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
-        if (button != Input.Buttons.LEFT || camera == null || viewport == null || universe == null) {
-            return false;
-        }
-        final Vector2 world = screenToWorld(screenX, screenY);
-        // System.out.println("screen X: " + screenX + " screen Y: " + screenY );
-        // System.out.println(" world X: " + world.x + "  world Y: " + world.y );
-
-        // final Optional<Ship> ship = pickShip(world);
-        // if (ship.isPresent()) {
-        //     selectedShip = ship.get();
-        //     System.out.printf("[point-click] selected ship %s%n", selectedShip.name());
-        //     return true;
-        // }
-
         return false;
     }
 
@@ -123,37 +104,4 @@ public class UserInputProcessor implements InputProcessor {
         return true;
     }
 
-    private Vector2 screenToWorld(final int screenX, final int screenY) {
-        camera.update();
-        return viewport.unproject(new Vector2(screenX, screenY));
-    }
-
-    // private Optional<Ship> pickShip(final Vector2 world) {
-    //     Ship closest = null;
-    //     double closestDistance = Double.MAX_VALUE;
-    //     for (final Ship ship : universe.getShips()) {
-    //         final double distance = distanceTo(world, ship);
-    //         if (distance <= pickRadiusFor(ship) && distance < closestDistance) {
-    //             closest = ship;
-    //             closestDistance = distance;
-    //         }
-    //     }
-    //     return Optional.ofNullable(closest);
-    // }
-
-    // private double distanceTo(final Vector2 world, final VisibleObject body) {
-    //     final double dx = world.x - body.x();
-    //     final double dy = world.y - body.y();
-    //     return Math.sqrt(dx * dx + dy * dy);
-    // }
-
-    // private double pickRadiusFor(final IdentifiableBody body) {
-    //     return Math.max(body.radius().doubleValue(), screenPickRadiusWorld());
-    // }
-
-    // private double screenPickRadiusWorld() {
-    //     final Vector2 center = viewport.unproject(new Vector2(0, 0));
-    //     final Vector2 offset = viewport.unproject(new Vector2(PICK_RADIUS_PIXELS, 0));
-    //     return Math.abs(offset.x - center.x);
-    // }
 }

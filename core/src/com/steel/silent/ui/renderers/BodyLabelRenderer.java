@@ -11,7 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.steel.silent.simulation.snapshot.BodyState;
-import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class BodyLabelRenderer {
         this.font.setColor(FOREGROUND);
     }
 
-    public void render(final OrthographicCamera camera, final List<ProjectedBody> bodies) {
+    public void render(final OrthographicCamera camera, final List<ProjectedBodyState> bodies) {
         font.getData().setScale(FONT_SCALE);
         screenProjection.setToOrtho2D(0f, 0f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batch.setProjectionMatrix(screenProjection);
@@ -74,7 +74,7 @@ public class BodyLabelRenderer {
         Gdx.gl.glDisable(GL20.GL_BLEND);
     }
 
-    private LabelBounds labelBounds(final OrthographicCamera camera, final ProjectedBody body) {
+    private LabelBounds labelBounds(final OrthographicCamera camera, final ProjectedBodyState body) {
         layout.setText(font, body.name());
 
         screenPosition.set((float) body.x(), (float) body.y(), 0f);
@@ -91,7 +91,7 @@ public class BodyLabelRenderer {
                 x + width * 0.5f, screenPosition.x, screenPosition.y);
     }
 
-    private boolean shouldLabel(final ProjectedBody body) {
+    private boolean shouldLabel(final ProjectedBodyState body) {
         return "PLANET".equals(body.classification())
                 || "MOON".equals(body.classification())
                 || "SHIP".equals(body.classification());

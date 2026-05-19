@@ -1,37 +1,24 @@
-package com.steel.silent;
+package com.steel.silent.app;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.MathUtils;
-import com.steel.silent.entity.Ship;
 import com.steel.silent.math.Vector;
 import com.steel.silent.model.body.CelestialBody;
 import com.steel.silent.model.body.FocalPoint;
 import com.steel.silent.model.body.Satellite;
+import com.steel.silent.model.craft.Ship;
 import com.steel.silent.model.orbit.CircularOrbit;
 import com.steel.silent.model.orbit.Orbit;
-import com.steel.silent.navigation.LaunchWindow;
-import com.steel.silent.navigation.OrbitalMechanics;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.steel.silent.AstroConstants.SUN_MU;
-import static com.steel.silent.AstroConstants.SUN_RADIUS;
-import static com.steel.silent.AstroConstants.SUN_ROTATION;
+import static com.steel.silent.app.AstroConstants.SUN_MU;
+import static com.steel.silent.app.AstroConstants.SUN_RADIUS;
+import static com.steel.silent.app.AstroConstants.SUN_ROTATION;
 
-public class TestObjects {
+public class DemoUniverseFactory {
 
-    // private static final double ORBIT_STEP = 400.0;
-    // private static final double MILLIS_PER_ORBITAL_DAY =
-    // Duration.ofDays(1).toMillis();
-
-    public static FocalPoint getFocalPoint(float scaled_width, float scaled_height) {
-
+    public static FocalPoint getSol() {
         final FocalPoint sol = new FocalPoint(
                 SUN_MU,
                 SUN_RADIUS,
@@ -41,11 +28,10 @@ public class TestObjects {
         sol.characteristics().setColor(Color.YELLOW.toString());
         sol.characteristics().setName("Sol");
         sol.characteristics().setClassification("STAR");
-
         return sol;
     }
 
-    public static List<Satellite> getSatellites(FocalPoint sol) {
+    public static List<Satellite> getSatellites(final FocalPoint sol) {
         final Satellite mercury = planet(sol, "Mercury",
                 Color.LIGHT_GRAY,
                 2.4394e6,
@@ -96,43 +82,10 @@ public class TestObjects {
                 109_080.0,
                 109_080.0);
 
-        // OrbitalMechanics.calculateTransferTime(earth, mars);
-
-        // double currentSimTimeSeconds = 0;
-
-        // Instant start = Instant.now();
-        // LaunchWindow window = OrbitalMechanics.findLaunchWindow(earth, mars, currentSimTimeSeconds);
-        // Instant end = Instant.now();
-        // Duration dur = Duration.between(start, end);
-
-        // System.out.println("Launch Window Brute:");
-        // System.out.println("  valid: " + window.isValid());
-        // System.out.println("  launch time seconds: " + window.getLaunchTime());
-        // System.out.println("  arrival time seconds: " + window.getArrivalTime());
-        // System.out.println("  transfer time days: " + window.getTransferTime() / 86_400.0);
-        // System.out.println("  phase error deg: " + Math.toDegrees(window.getPhaseError()));
-        // System.out.println("  duration: " + dur);
-
-        // Instant start2 = Instant.now();
-
-        // LaunchWindow window2 = OrbitalMechanics.findLaunchWindowTwoPass(earth, mars, currentSimTimeSeconds);
-        // Instant end2 = Instant.now();
-        // Duration dur2 = Duration.between(start2, end2);
-
-        // System.out.println("Launch Window Refined:");
-        // System.out.println("  valid: " + window2.isValid());
-        // System.out.println("  launch time seconds: " + window2.getLaunchTime());
-        // System.out.println("  arrival time seconds: " + window2.getArrivalTime());
-        // System.out.println("  transfer time days: " + window2.getTransferTime() / 86_400.0);
-        // System.out.println("  phase error deg: " + Math.toDegrees(window2.getPhaseError()));
-        // System.out.println("  duration: " + dur2);
-
         return Arrays.asList(mercury, venus, earth, moon, mars, phobos, deimos);
     }
 
-    /**
-     * A debug ship that starts in low orbit around the given parent body.
-     */
+    /** A debug ship starting in low orbit around the given parent body. */
     public static Ship getTestShip(final CelestialBody parent) {
         final double orbitalRadiusMeters = parent.radiusMeters() + Math.max(1_000.0, parent.radiusMeters() * 0.20);
         final double orbitalPeriodSeconds = circularOrbitPeriodSeconds(parent, orbitalRadiusMeters);
@@ -141,14 +94,6 @@ public class TestObjects {
         ship.characteristics().setName("Wayfarer");
         return ship;
     }
-
-    // -------------------------------------------------------------------------
-    // Private factory helpers
-    // -------------------------------------------------------------------------
-
-    // private static BigDecimal days(final double days) {
-    // return bd(days * MILLIS_PER_ORBITAL_DAY);
-    // }
 
     private static double circularOrbitPeriodSeconds(final CelestialBody parent,
             final double orbitalRadiusMeters) {
@@ -176,17 +121,6 @@ public class TestObjects {
         planet.characteristics().setColor(color.toString());
         planet.characteristics().setName(name);
         planet.characteristics().setClassification("PLANET");
-        System.out.println("= " + name);
-        System.out.println(" - body radius    " + radiusMeters);
-        // System.out.println(" - influence      " + planet.influenceRadius());
-        System.out.println(" - orbital radius " + orbitalRadiusMeters);
-        System.out.println(" - orbital period " + orbitalPeriodSeconds + " (seconds)");
-        System.out.println(" - orbital period " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
-
-        // System.out.println(planet.name() + " satellite radius: " +
-        // planet.artificialSatelliteOrbitRadius());
-        // System.out.println(planet.name() + " influence radius: " +
-        // planet.influenceRadius());
         return planet;
     }
 
@@ -208,10 +142,8 @@ public class TestObjects {
             final double mu,
             final double orbitalPeriodSeconds,
             final double rotationPeriodSeconds) {
-
         final Orbit circularOrbit = new CircularOrbit(parent, orbitalRadiusMeters, orbitalPeriodSeconds);
         final Vector initialPosition = initializeVector(parent, orbitalRadiusMeters, Math.random() * Math.PI * 2);
-
         final Satellite moon = new Satellite(
                 circularOrbit,
                 mu,
@@ -222,13 +154,6 @@ public class TestObjects {
         moon.characteristics().setColor(color.toString());
         moon.characteristics().setName(name);
         moon.characteristics().setClassification("MOON");
-
-        System.out.println("= " + name);
-        System.out.println(" - body radius    " + radiusMeters);
-        System.out.println(" - orbital vel " + circularOrbit.periodSeconds());
-        System.out.println(" - orbital radous " + orbitalRadiusMeters);
-        System.out.println(" - orbital period " + orbitalPeriodSeconds + " (seconds)");
-        System.out.println(" - orbital period " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
         return moon;
     }
 }

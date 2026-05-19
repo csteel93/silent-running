@@ -1,18 +1,17 @@
 package com.steel.silent.simulation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
-import com.steel.silent.entity.Ship;
 import com.steel.silent.model.body.CelestialBody;
 import com.steel.silent.model.body.Satellite;
+import com.steel.silent.model.craft.Ship;
 import com.steel.silent.model.orbit.OrbitState;
+import com.steel.silent.simulation.monitor.OrbitCompletionLogger;
 import com.steel.silent.simulation.snapshot.BodyState;
 import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.simulation.snapshot.SnapshotPublisher;
@@ -22,7 +21,7 @@ public class Universe {
     private final List<SolarSystem> solarSystems = new ArrayList<>();
     private final List<Ship> ships = new CopyOnWriteArrayList<>();
     private final SnapshotPublisher snapshotPublisher = new SnapshotPublisher();
-    private final Map<UUID, Long> loggedOrbitCountsByBodyId = new HashMap<>();
+    private final OrbitCompletionLogger orbitLogger = new OrbitCompletionLogger();
 
     private final long epochMillis;
     private final AtomicLong elapsedSimMillis = new AtomicLong(0);
@@ -40,7 +39,7 @@ public class Universe {
         final long realDeltaMillis = updatedMillis - previousTime;
         final long simDeltaMillis = Math.round(realDeltaMillis * speed);
         final long elapsedMillis = elapsedSimMillis.addAndGet(simDeltaMillis);
-        logCompletedOrbits(elapsedMillis / 1000.0);
+        orbitLogger.tick(solarSystems.stream(), elapsedMillis / 1000.0);
         publishSnapshot();
         return updatedMillis;
     }
@@ -75,7 +74,6 @@ public class Universe {
 
     private BodyState toBodyState(final CelestialBody body, final double simTimeSeconds) {
         final OrbitState orbitState = orbitStateFor(body, simTimeSeconds);
-
         return new BodyState(
                 body.id(),
                 primaryBodyId(body),
@@ -85,13 +83,12 @@ public class Universe {
                 orbitState.velocityMetersPerSecond(),
                 body.orientationAt(simTimeSeconds),
                 body.radiusMeters(),
-                body instanceof Satellite ? ((Satellite)body).influenceRadius() : body.radiusMeters(),
+                body instanceof Satellite ? ((Satellite) body).influenceRadius() : body.radiusMeters(),
                 body.color());
     }
 
     private BodyState toBodyState(final Ship ship, final double simTimeSeconds) {
         final OrbitState orbitState = ship.stateAt(simTimeSeconds);
-
         return new BodyState(
                 ship.id(),
                 ship.primary().id(),
@@ -117,39 +114,6 @@ public class Universe {
             return satellite.orbit().stateAt(simTimeSeconds);
         }
         return OrbitState.stationary(body.initialPositionMeters());
-    }
-
-    private void logCompletedOrbits(final double simTimeSeconds) {
-        solarSystems.stream()
-                .flatMap(SolarSystem::bodies)
-                .filter(body -> body instanceof Satellite)
-                .map(body -> (Satellite) body)
-                .filter(this::shouldLogOrbitCompletions)
-                .forEach(satellite -> logCompletedOrbits(satellite, simTimeSeconds));
-    }
-
-    private boolean shouldLogOrbitCompletions(final Satellite satellite) {
-        return ("Moon".equals(satellite.name()) && "Earth".equals(satellite.primary().name()))
-                || ("Earth".equals(satellite.name()) && "STAR".equals(satellite.primary().classification()));
-    }
-
-    private void logCompletedOrbits(final Satellite satellite, final double simTimeSeconds) {
-        final double angleRadians = satellite.orbit().stateAt(simTimeSeconds).angleRadians();
-        final long completedOrbitCount = (long) Math.floor(angleRadians / (Math.PI * 2.0));
-        final long previousLoggedCount = loggedOrbitCountsByBodyId.computeIfAbsent(
-                satellite.id(),
-                ignored -> completedOrbitCount);
-
-        for (long orbitCount = previousLoggedCount + 1; orbitCount <= completedOrbitCount; orbitCount++) {
-            System.out.printf(
-                    "%s completed orbit #%d around %s at %.2f simulated days%n",
-                    satellite.name(),
-                    orbitCount,
-                    satellite.primary().name(),
-                    simTimeSeconds / 86_400.0);
-        }
-
-        loggedOrbitCountsByBodyId.put(satellite.id(), completedOrbitCount);
     }
 
     public void withSolarSystem(final SolarSystem solarSystem) {

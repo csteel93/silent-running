@@ -1,4 +1,4 @@
-package com.steel.silent.entity;
+package com.steel.silent.model.craft;
 
 import java.util.UUID;
 

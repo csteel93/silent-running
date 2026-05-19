@@ -60,7 +60,6 @@ public class PauseButton extends TextButton {
                     paused = false;
                     setText(PAUSE);
                 } else {
-                    System.out.println("PAUSING");
                     simulation.pause();
                     paused = true;
                     setText(RESUME);
