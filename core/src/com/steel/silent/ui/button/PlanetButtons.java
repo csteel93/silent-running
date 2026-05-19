@@ -37,7 +37,7 @@ public class PlanetButtons extends Group {
                 .filter(BODY_OF_INTEREST)
                 .map(body -> (VisibleBody) body)
                 .forEach(body -> {
-                    System.out.println("Generating zoom button for " + body.name());
+                    // System.out.println("Generating zoom button for " + body.name());
                     final PlanetButton button = new PlanetButton(body, drawable, map);
                     button.setPosition(PLANET_BUTTON_X, getNextY(index[0]));
                     addActor(button);

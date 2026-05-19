@@ -7,11 +7,13 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
 import com.steel.silent.entity.CelestialBody;
 import com.steel.silent.entity.Satellite;
 import com.steel.silent.entity.Ship;
-import com.steel.silent.navigation.HohmannDebugInfo;
+import com.steel.silent.navigation.HohmannDrawData;
 import com.steel.silent.navigation.LaunchWindow;
+import com.steel.silent.navigation.OrbitalMechanics;
 import com.steel.silent.ui.renderers.viewProxies.VisibleBody;
 import com.steel.silent.ui.renderers.viewProxies.VisibleObject;
 import com.steel.silent.ui.renderers.viewProxies.VisibleSatellite;
@@ -54,8 +56,9 @@ public class UniverseRenderer {
                 put("SHIP", body -> new ShipRenderer((Ship) body, shapeRenderer));
             }
         };
-        registerPredicateRenderer(obj -> "Earth".equals(obj.name()), obj -> new EntityTextureRenderer(obj, new Texture(Gdx.files.internal("earth.png"))));
-        
+        registerPredicateRenderer(obj -> "Earth".equals(obj.name()),
+                obj -> new EntityTextureRenderer(obj, new Texture(Gdx.files.internal("earth.png"))));
+
         whiteCircleRenderer = new WhiteCircleRenderer(shapeRenderer);
         bodyLabelRenderer = new BodyLabelRenderer(shapeRenderer);
         loadRenderers(universe);
@@ -74,14 +77,14 @@ public class UniverseRenderer {
     }
 
     private static record RendererRule(Predicate<VisibleObject> predicate,
-                                       Function<VisibleObject, EntityRenderer> supplier) {
+            Function<VisibleObject, EntityRenderer> supplier) {
     }
 
     /**
      * Register a predicate-based renderer. The first matching predicate wins.
      */
     public void registerPredicateRenderer(final Predicate<VisibleObject> predicate,
-                                          final Function<VisibleObject, EntityRenderer> supplier) {
+            final Function<VisibleObject, EntityRenderer> supplier) {
         predicateRenderers.add(new RendererRule(predicate, supplier));
     }
 
@@ -98,12 +101,111 @@ public class UniverseRenderer {
         // Render debug overlay last so it draws on top.
         debugOverlay.render(projection);
 
-        // LaunchWindow launchWindow = OrbitalMechanics.findLaunchWindow(earth, mars, universe.getSimTime());
-        // HohmannDebugInfo debugInfo = OrbitalMechanics.buildHohmannDebugInfo(launchWindow, universe.getSimTime());
+        double simTimeSeconds = universe.getSimTime() / 1000.0;
+
+        LaunchWindow window = OrbitalMechanics.findLaunchWindowTwoPass(earth.getSatellite(), mars.getSatellite(),
+                simTimeSeconds);
+
+        RenderProjection renderProjection = new RenderProjection(universe.getMapScale());
+
+        HohmannDrawData drawData = HohmannDrawData.buildHohmannDrawData(window);
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(0.3f, 0.3f, 0.6f, 0.7f);
+
+        drawOrbitRing(shapeRenderer, earth, simTimeSeconds, renderProjection);
+        drawOrbitRing(shapeRenderer, mars, simTimeSeconds, renderProjection);
+
+        shapeRenderer.end();
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.YELLOW);
+        drawRoute(shapeRenderer, drawData.transferPointsMeters(), renderProjection);
+
+        shapeRenderer.end();
+
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(Color.GREEN);
+
+        drawMarker(
+                shapeRenderer,
+                drawData.sourceLaunchPosMeters(),
+                6f,
+                renderProjection);
+
+        shapeRenderer.setColor(Color.CYAN);
+        drawMarker(
+                shapeRenderer,
+                drawData.destinationArrivalPosMeters(),
+                8f,
+                renderProjection);
+
+        shapeRenderer.setColor(Color.ORANGE);
+        drawMarker(
+                shapeRenderer,
+                drawData.expectedArrivalPosMeters(),
+                12f,
+                renderProjection);
+
+        shapeRenderer.end();
+        // LaunchWindow launchWindow = OrbitalMechanics.findLaunchWindow(earth, mars,
+        // universe.getSimTime());
+        // HohmannDebugInfo debugInfo =
+        // OrbitalMechanics.buildHohmannDebugInfo(launchWindow, universe.getSimTime());
         // drawHohmannDebug(projection, debugInfo, launchWindow);
     }
 
-    public void drawHohmannDebug(final Matrix4 projection, HohmannDebugInfo debug, LaunchWindow launchWindow) {
+    public void drawMarker(
+            ShapeRenderer shapeRenderer,
+            Vec2d worldMeters,
+            float markerRadiusRenderUnits,
+            RenderProjection projection) {
+        Vector2 p = projection.toRenderPosition(worldMeters);
+
+        shapeRenderer.circle(
+                p.x,
+                p.y,
+                markerRadiusRenderUnits,
+                32);
+    }
+
+    public void drawRoute(
+            ShapeRenderer shapeRenderer,
+            List<Vec2d> routePointsMeters,
+            RenderProjection projection) {
+        if (routePointsMeters == null || routePointsMeters.size() < 2) {
+            return;
+        }
+
+        for (int i = 0; i < routePointsMeters.size() - 1; i++) {
+            Vector2 a = projection.toRenderPosition(routePointsMeters.get(i));
+
+            Vector2 b = projection.toRenderPosition(routePointsMeters.get(i + 1));
+
+            shapeRenderer.line(a.x, a.y, b.x, b.y);
+        }
+    }
+
+    public void drawOrbitRing(
+            ShapeRenderer shapeRenderer,
+            VisibleSatellite body,
+            double simTimeSeconds,
+            RenderProjection projection) {
+
+        Vec2d parentWorldPosition = body.getSatellite().getFocalPoint().getWorldPositionMeters(simTimeSeconds);
+
+        Vector2 parentRenderPosition = projection.toRenderPosition(parentWorldPosition);
+
+        float renderOrbitRadius = projection.toRenderDistance(body.getSatellite().getOrbitalRadius());
+
+        shapeRenderer.circle(
+                parentRenderPosition.x,
+                parentRenderPosition.y,
+                renderOrbitRadius,
+                256);
+    }
+
+    public void drawHohmannDebug(final Matrix4 projection, HohmannDrawData debug, LaunchWindow launchWindow) {
 
         System.out.println("currentTime: " + universe.getSimTime());
         System.out.println("launchTime: " + launchWindow.launchTime);
@@ -112,28 +214,40 @@ public class UniverseRenderer {
         System.out.println("launch-current delta: " + (launchWindow.launchTime - universe.getSimTime()));
         System.out.println("arrival-current delta: " + (launchWindow.arrivalTime - universe.getSimTime()));
 
+        // shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // drawBody(shapeRenderer, sun, simTimeSeconds, projection, cameraCenterMeters);
+        // drawBody(shapeRenderer, earth, simTimeSeconds, projection,
+        // cameraCenterMeters);
+        // drawBody(shapeRenderer, mars, simTimeSeconds, projection,
+        // cameraCenterMeters);
+
+        // shapeRenderer.end();
+
         // Current positions
         // whiteCircleRenderer.render(projection, debug.sourceCurrentPosition,
-        //         launchWindow.source.getOrbitalRadius().floatValue());
+        // launchWindow.source.getOrbitalRadius().floatValue());
         // whiteCircleRenderer.render(projection, debug.destinationCurrentPosition,
-        //         launchWindow.destination.getOrbitalRadius().floatValue());
+        // launchWindow.destination.getOrbitalRadius().floatValue());
 
         // System.out.println("source current position: "
-        //         + debug.sourceCurrentPosition.x + " " + debug.sourceCurrentPosition.y);
+        // + debug.sourceCurrentPosition.x + " " + debug.sourceCurrentPosition.y);
         // System.out.println("destination current position: "
-        //         + debug.destinationCurrentPosition.x + " " + debug.destinationCurrentPosition.y);
+        // + debug.destinationCurrentPosition.x + " " +
+        // debug.destinationCurrentPosition.y);
         // drawCircle(debug.sourceCurrentPosition, 8f);
         // drawCircle(debug.destinationCurrentPosition, 8f);
 
         // whiteCircleRenderer.render(projection, debug.sourceLaunchPosition,
-        //         launchWindow.source.radius().floatValue());
+        // launchWindow.source.radius().floatValue());
         // whiteCircleRenderer.render(projection, debug.destinationArrivalPosition,
-        //         launchWindow.destination.radius().floatValue());
+        // launchWindow.destination.radius().floatValue());
 
         // System.out.println("source launch position: "
-        //         + debug.sourceLaunchPosition.x + " " + debug.sourceLaunchPosition.y);
+        // + debug.sourceLaunchPosition.x + " " + debug.sourceLaunchPosition.y);
         // System.out.println("destination arrival position: "
-        //         + debug.destinationArrivalPosition.x + " " + debug.destinationArrivalPosition.y);
+        // + debug.destinationArrivalPosition.x + " " +
+        // debug.destinationArrivalPosition.y);
         // // Launch and arrival markers
         // drawCircle(debug.sourceLaunchPosition, 10f);
         // drawCircle(debug.destinationArrivalPosition, 10f);
@@ -162,44 +276,6 @@ public class UniverseRenderer {
         // drawArrow(
         // debug.destinationArrivalPosition,
         // new Vector2(debug.destinationArrivalVelocity).nor().scl(80f));
-    }
-
-    private void renderInfluenceGuides(final Matrix4 projection) {
-        shapeRenderer.setProjectionMatrix(projection);
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        universe.getState().forEach(body -> {
-            if (body instanceof final VisibleBody celestialBody) {
-                drawInfluenceGuides(celestialBody);
-            }
-        });
-        shapeRenderer.end();
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-    }
-
-    private void drawInfluenceGuides(final VisibleBody body) {
-        // final Color base = safeColor(body.getColor());
-        // final float x = (float)body.x();
-        // final float y = body.y().floatValue();
-        // final float satelliteOrbitRadius = body.artificialSatelliteOrbitRadius().floatValue();
-        // final float outerInfluenceRadius = body.renderedInfluenceRadius().floatValue();
-
-        // shapeRenderer.setColor(base.r, base.g, base.b, SATELLITE_ORBIT_ALPHA);
-        // shapeRenderer.circle(x, y, satelliteOrbitRadius, ORBIT_GUIDE_SEGMENTS);
-
-        // shapeRenderer.setColor(base.r, base.g, base.b, OUTER_INFLUENCE_ALPHA);
-        // shapeRenderer.circle(x, y, outerInfluenceRadius, ORBIT_GUIDE_SEGMENTS);
-    }
-
-    private Color safeColor(final String color) {
-        if (color == null)
-            return Color.WHITE;
-        try {
-            return Color.valueOf(color);
-        } catch (final Exception e) {
-            return Color.WHITE;
-        }
     }
 
     private void loadRenderers(final VisibleUniverse universe) {

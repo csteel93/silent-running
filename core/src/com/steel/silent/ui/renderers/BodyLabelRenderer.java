@@ -90,8 +90,12 @@ public class BodyLabelRenderer {
                 x + width * 0.5f, screenPosition.x, screenPosition.y);
     }
 
+    // private boolean shouldLabel(final VisibleObject body) {
+    // return "PLANET".equals(body.classification()) ||
+    // "MOON".equals(body.classification());
+    // }
     private boolean shouldLabel(final VisibleObject body) {
-        return "PLANET".equals(body.classification()) || "MOON".equals(body.classification());
+        return "PLANET".equals(body.classification());
     }
 
     public void dispose() {

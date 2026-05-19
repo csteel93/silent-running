@@ -12,6 +12,8 @@ import com.steel.silent.navigation.OrbitalMechanics;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -90,23 +92,36 @@ public class TestObjects {
                 109_080.0,
                 109_080.0);
 
-        double transferTimeSeconds = OrbitalMechanics.calculateTransferTime(earth, mars);
-        System.out.println("transfer time earch - mars: " + transferTimeSeconds);
+        // OrbitalMechanics.calculateTransferTime(earth, mars);
 
-        // LaunchWindow best = OrbitalMechanics.findLaunchWindow(earth, mars, 0);
+        double currentSimTimeSeconds = 0;
 
-        // System.out.println("Launch Window:");
-        // System.out.println(" valid: " + best.valid);
-        // System.out.println(" launch time: " + best.launchTime);
-        // System.out.println(" arrival time: " + best.arrivalTime);
-        // System.out.println(" transfer time: " + best.transferTime);
-        // System.out.println(" source launch angle: " + best.sourceLaunchAngle);
-        // System.out.println(" expected arrival angle: " + best.expectedArrivalAngle);
-        // System.out.println(" destination arrival angle: " +
-        // best.destinationArrivalAngle);
-        // System.out.println(" phase error radians: " + best.phaseError);
-        // System.out.println(" phase error degrees: " + best.phaseError *
-        // MathUtils.radiansToDegrees);
+        Instant start = Instant.now();
+        LaunchWindow window = OrbitalMechanics.findLaunchWindow(earth, mars, currentSimTimeSeconds);
+        Instant end = Instant.now();
+        Duration dur = Duration.between(start, end);
+
+        System.out.println("Launch Window Brute:");
+        System.out.println("  valid: " + window.isValid());
+        System.out.println("  launch time seconds: " + window.getLaunchTime());
+        System.out.println("  arrival time seconds: " + window.getArrivalTime());
+        System.out.println("  transfer time days: " + window.getTransferTime() / 86_400.0);
+        System.out.println("  phase error deg: " + Math.toDegrees(window.getPhaseError()));
+        System.out.println("  duration: " + dur);
+
+        Instant start2 = Instant.now();
+
+        LaunchWindow window2 = OrbitalMechanics.findLaunchWindowTwoPass(earth, mars, currentSimTimeSeconds);
+        Instant end2 = Instant.now();
+        Duration dur2 = Duration.between(start2, end2);
+
+        System.out.println("Launch Window Refined:");
+        System.out.println("  valid: " + window2.isValid());
+        System.out.println("  launch time seconds: " + window2.getLaunchTime());
+        System.out.println("  arrival time seconds: " + window2.getArrivalTime());
+        System.out.println("  transfer time days: " + window2.getTransferTime() / 86_400.0);
+        System.out.println("  phase error deg: " + Math.toDegrees(window2.getPhaseError()));
+        System.out.println("  duration: " + dur2);
 
         return Arrays.asList(mercury, venus, earth, moon, mars, phobos, deimos);
     }
@@ -161,12 +176,12 @@ public class TestObjects {
         planet.getCharacteristics().setColor(color.toString());
         planet.getCharacteristics().setName(name);
         planet.getCharacteristics().setClassification("PLANET");
-        System.out.println("=  " + name);
-        System.out.println(" - radius    " + radiusMeters);
-        System.out.println(" - influence " + planet.getInfluenceRadius());
-        System.out.println(" - orbital   " + orbitalRadiusMeters);
-        System.out.println(" - period    " + orbitalPeriodSeconds + " (seconds)");
-        System.out.println(" - period    " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
+        // System.out.println("=  " + name);
+        // System.out.println(" - radius    " + radiusMeters);
+        // System.out.println(" - influence " + planet.getInfluenceRadius());
+        // System.out.println(" - orbital   " + orbitalRadiusMeters);
+        // System.out.println(" - period    " + orbitalPeriodSeconds + " (seconds)");
+        // System.out.println(" - period    " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
 
         // System.out.println(planet.name() + " satellite radius: " +
         // planet.artificialSatelliteOrbitRadius());
@@ -190,11 +205,11 @@ public class TestObjects {
         moon.getCharacteristics().setName(name);
         moon.getCharacteristics().setClassification("MOON");
 
-        System.out.println("=  " + name);
-        System.out.println(" - radius  " + radiusMeters);
-        System.out.println(" - orbital " + orbitalRadiusMeters);
-        System.out.println(" - period  " + orbitalPeriodSeconds + " (seconds)");
-        System.out.println(" - period  " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
+        // System.out.println("=  " + name);
+        // System.out.println(" - radius  " + radiusMeters);
+        // System.out.println(" - orbital " + orbitalRadiusMeters);
+        // System.out.println(" - period  " + orbitalPeriodSeconds + " (seconds)");
+        // System.out.println(" - period  " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
         return moon;
     }
 }

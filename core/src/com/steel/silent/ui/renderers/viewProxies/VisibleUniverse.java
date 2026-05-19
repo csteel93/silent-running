@@ -6,29 +6,35 @@ import java.util.stream.Stream;
 
 import com.steel.silent.simulation.Universe;
 
+import lombok.Getter;
+
 public class VisibleUniverse {
 
     private final Universe universe;
     private final List<VisibleSolarSystem> solarSystems;
     private final List<VisibleObject> visibleObjects;
     private final double timeScale;
+    @Getter
+    private final MapScale mapScale;
 
     public VisibleUniverse(final Universe universe,
             final List<VisibleSolarSystem> solarSystems,
-            final double timeScale) {
+            final double timeScale,
+            final MapScale mapScale) {
         this.universe = universe;
         this.solarSystems = solarSystems;
         this.visibleObjects = solarSystems.stream()
                 .flatMap(VisibleSolarSystem::getStateOfSolarSystem)
                 .collect(Collectors.toList());
         this.timeScale = timeScale;
+        this.mapScale = mapScale;
     }
 
-    public long getSimTime(){
+    public long getSimTime() {
         return universe.getSimTime();
     }
 
-   public Stream<VisibleObject> getState() {
+    public Stream<VisibleObject> getState() {
         return visibleObjects.stream();
     }
 
@@ -37,7 +43,7 @@ public class VisibleUniverse {
             final double bodyScale, final double timeScale) {
         final MapScale mapScale = MapScale.fromUniverse(universe, mapWidth, mapHeight, bodyScale);
 
-        return new VisibleUniverse(universe, getVisibleSolarSystems(universe, mapScale), timeScale);
+        return new VisibleUniverse(universe, getVisibleSolarSystems(universe, mapScale), timeScale, mapScale);
     }
 
     private static List<VisibleSolarSystem> getVisibleSolarSystems(final Universe universe, final MapScale mapScale) {

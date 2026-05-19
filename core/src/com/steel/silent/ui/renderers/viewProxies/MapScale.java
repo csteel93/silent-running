@@ -3,6 +3,9 @@ package com.steel.silent.ui.renderers.viewProxies;
 import com.steel.silent.entity.IdentifiableBody;
 import com.steel.silent.entity.Satellite;
 import com.steel.silent.simulation.Universe;
+import com.steel.silent.ui.renderers.Vec2d;
+
+import lombok.Getter;
 
 public class MapScale {
 
@@ -13,6 +16,7 @@ public class MapScale {
 
     private final double centerX;
     private final double centerY;
+    @Getter
     private final double metersPerMapUnit;
     private final double bodyScale;
 
@@ -40,6 +44,10 @@ public class MapScale {
                 mapHeight * 0.5,
                 Math.max(1.0, worldRadius / mapRadius),
                 bodyScale);
+    }
+
+    public Vec2d getCoordinates(final Vec2d coords) {
+        return new Vec2d(x(coords.x()), y(coords.y()));
     }
 
     public double x(final double meters) {

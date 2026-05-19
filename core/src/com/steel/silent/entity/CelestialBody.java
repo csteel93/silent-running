@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 
+import com.steel.silent.ui.renderers.Vec2d;
+
 @EqualsAndHashCode(exclude = "coordinates")
 @RequiredArgsConstructor
 public class CelestialBody implements IdentifiableBody {
@@ -22,9 +24,18 @@ public class CelestialBody implements IdentifiableBody {
     // full rotation in seconds
     @Getter
     private final double rotationalSpeed;
-
     @Getter
     protected Characteristics characteristics = new Characteristics();
+
+    public Vec2d getWorldPositionMeters(double simTimeSeconds) {
+        return new Vec2d(
+                coordinates.x(),
+                coordinates.y());
+    }
+
+    public Vec2d getWorldVelocityMetersPerSecond(double simTimeSeconds) {
+        return new Vec2d(0.0, 0.0);
+    }
 
     @Override
     public String name() {

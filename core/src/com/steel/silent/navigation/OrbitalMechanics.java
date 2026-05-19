@@ -8,8 +8,8 @@ import com.steel.silent.entity.Satellite;
 public class OrbitalMechanics {
 
     public static double calculateTransferTime(final Satellite source, final Satellite destination) {
-        System.out.println("Transfer time between " + source.name() + " and " +
-                destination.name());
+        // System.out.println("Transfer time between " + source.name() + " and " +
+        //         destination.name());
 
         final CelestialBody parent = source.getFocalPoint();
 
@@ -22,120 +22,282 @@ public class OrbitalMechanics {
 
         final boolean outward = destRads > sourceRads;
 
-        System.out.println("    parent: " + parent.name());
-        System.out.println("    source radius: " + sourceRads);
-        System.out.println("    destination radius: " + destRads);
-        System.out.println("    parent mu: " + mu);
-        System.out.println("    semi major axis: " + semiMajorAxis);
-        System.out.println("    transfer time: " + transferTimeSeconds);
-        System.out.println("    outward: " + outward);
+        // System.out.println("    parent: " + parent.name());
+        // System.out.println("    source radius: " + sourceRads);
+        // System.out.println("    destination radius: " + destRads);
+        // System.out.println("    parent mu: " + mu);
+        // System.out.println("    semi major axis: " + semiMajorAxis);
+        // System.out.println("    transfer time: " + transferTimeSeconds);
+        // System.out.println("    outward: " + outward);
         return transferTimeSeconds;
     }
 
-    // public static LaunchWindow findLaunchWindow(
-    // Satellite source,
-    // Satellite destination,
-    // float earliestLaunchTime) {
-    // if (source.getFocalPoint() != destination.getFocalPoint()) {
-    // return null;
-    // }
+    public static LaunchWindow findLaunchWindow(
+            Satellite source,
+            Satellite destination,
+            double earliestLaunchTimeSeconds) {
+        CelestialBody parent = source.getFocalPoint();
 
-    // float transferTime = calculateTransferTime(source, destination);
+        double transferTimeSeconds = calculateTransferTime(source, destination);
+        double destinationPeriodSeconds = (Math.PI * 2.0) / Math.abs(destination.getAngularVelocity());
 
-    // float searchStep = 0.25f;
-    // float tolerance = MathUtils.degreesToRadians * 3f;
+        double searchStepSeconds = 3_600.0; // 1 hour
+        double maxSearchTimeSeconds = destinationPeriodSeconds * 3.0;
 
-    // float destinationPeriod = MathUtils.PI2 / destination.getAngularVelocity();
+        double toleranceRad = Math.toRadians(1.0);
+        LaunchWindow best = null;
+        double bestAbsError = Double.MAX_VALUE;
 
-    // float maxSearchTime = destinationPeriod * 3f;
+        double searchStart = earliestLaunchTimeSeconds;
+        double searchEnd = earliestLaunchTimeSeconds + maxSearchTimeSeconds;
 
-    // LaunchWindow best = null;
-    // float bestAbsError = Float.MAX_VALUE;
+        for (double launchTime = searchStart; launchTime <= searchEnd; launchTime += searchStepSeconds) {
 
-    // float launchTime = earliestLaunchTime/1000f;
-    // System.out.println(" launch time: " + launchTime);
-    // int index = 0;
-    // for (float time = launchTime; time <= launchTime + maxSearchTime; time +=
-    // searchStep) {
-    // System.out.println(" == earliest launch time " + earliestLaunchTime);
-    // System.out.println(" == time " + time);
-    // System.out.println(" == launch time " + launchTime);
-    // System.out.println(" == max search time " + maxSearchTime);
-    // System.out.println(" == launch plus search " + (launchTime + maxSearchTime));
-    // System.out.println(" == time <= cap " + (time <= launchTime +
-    // maxSearchTime));
-    // System.out.println(" == destination period " + destinationPeriod);
-    // float arrivalTime = time + transferTime;
+            double arrivalTime = launchTime + transferTimeSeconds;
+            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
+            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
+            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
+            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+            double absError = Math.abs(phaseError);
 
-    // float newOrbitalAngle = source.getOrbitAngle(time).floatValue();
-    // float sourceAngle = normalizeAngle(newOrbitalAngle);
-    // System.out.println(" == current angle " + source.getRelativeAngle().get());
-    // System.out.println(" == orbital speed " + source.getOrbitalSpeed());
-    // System.out.println(" == angular velocity " + source.getAngularVelocity());
-    // System.out.println(" == future angle " + newOrbitalAngle);
-    // System.out.println(" == normalized angle " + sourceAngle);
+            LaunchWindow candidate = new LaunchWindow(
+                    source,
+                    destination,
+                    parent,
 
-    // float expectedArrival = normalizeAngle(sourceAngle + MathUtils.PI);
+                    launchTime,
+                    arrivalTime,
+                    transferTimeSeconds,
 
-    // float destinationArrival = normalizeAngle(destination.getOrbitAngle(
-    // arrivalTime).floatValue());
+                    sourceLaunchAngle,
+                    expectedArrivalAngle,
+                    destinationArrivalAngle,
 
-    // float error = angleDifference(expectedArrival, destinationArrival);
-    // float absError = Math.abs(error);
+                    phaseError,
+                    absError <= toleranceRad);
 
-    // if (absError < bestAbsError) {
-    // bestAbsError = absError;
+            if (absError < bestAbsError) {
+                bestAbsError = absError;
+                best = candidate;
+            }
 
-    // best = new LaunchWindow();
-    // best.source = source;
-    // best.destination = destination;
-    // best.parent = source.getFocalPoint();
-    // best.launchTime = time;
-    // best.arrivalTime = arrivalTime;
-    // best.transferTime = transferTime;
-    // best.phaseError = error;
-    // best.valid = absError < tolerance;
-    // best.sourceLaunchAngle = sourceAngle;
-    // best.expectedArrivalAngle = expectedArrival;
-    // best.destinationArrivalAngle = destinationArrival;
-    // }
+            if (candidate.isValid()) {
+                return candidate;
+            }
+        }
+        return best;
+    }
 
-    // if (absError < tolerance) {
-    // return best;
-    // }
-    // if (index ++ > 10){
-    // break;
-    // }
+    public static LaunchWindow findLaunchWindowStep(
+            Satellite source,
+            Satellite destination,
+            double earliestLaunchTimeSeconds,
+            double searchStepSeconds,
+            double toleranceRad,
+            double maxSearchPeriods) {
+        CelestialBody parent = source.getFocalPoint();
 
-    // }
-    // return best;
-    // }
+        double transferTimeSeconds = calculateTransferTime(source, destination);
+        double destinationPeriodSeconds = (Math.PI * 2.0) / Math.abs(destination.getAngularVelocity());
 
-    // private static float normalizeAngle(final float angle) {
-    // final float twoPi = MathUtils.PI2;
-    // float newAngle = angle % twoPi;
+        double maxSearchTimeSeconds = destinationPeriodSeconds * maxSearchPeriods;
 
-    // if (newAngle < 0) {
-    // newAngle += twoPi;
-    // }
+        LaunchWindow best = null;
+        double bestAbsError = Double.MAX_VALUE;
 
-    // return newAngle;
-    // }
+        double searchStart = earliestLaunchTimeSeconds;
+        double searchEnd = earliestLaunchTimeSeconds + maxSearchTimeSeconds;
+
+        for (double launchTime = searchStart; launchTime <= searchEnd; launchTime += searchStepSeconds) {
+
+            double arrivalTime = launchTime + transferTimeSeconds;
+            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
+            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
+            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
+            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+            double absError = Math.abs(phaseError);
+
+            LaunchWindow candidate = new LaunchWindow(
+                    source,
+                    destination,
+                    parent,
+
+                    launchTime,
+                    arrivalTime,
+                    transferTimeSeconds,
+
+                    sourceLaunchAngle,
+                    expectedArrivalAngle,
+                    destinationArrivalAngle,
+
+                    phaseError,
+                    absError <= toleranceRad);
+
+            if (absError < bestAbsError) {
+                bestAbsError = absError;
+                best = candidate;
+            }
+
+            if (candidate.isValid()) {
+                return candidate;
+            }
+        }
+        return best;
+    }
+
+    public static LaunchWindow findLaunchWindowWithStepForDuration(
+            Satellite source,
+            Satellite destination,
+            double searchStartSeconds,
+            double searchDurationSeconds,
+            double searchStepSeconds,
+            double toleranceRad) {
+        CelestialBody parent = source.getFocalPoint();
+
+        double transferTimeSeconds = calculateTransferTime(source, destination);
+
+        LaunchWindow best = null;
+        double bestAbsError = Double.MAX_VALUE;
+
+        double searchEndSeconds = searchStartSeconds + searchDurationSeconds;
+
+        for (double launchTime = searchStartSeconds; launchTime <= searchEndSeconds; launchTime += searchStepSeconds) {
+            double arrivalTime = launchTime + transferTimeSeconds;
+
+            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
+
+            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
+
+            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
+
+            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+
+            double absError = Math.abs(phaseError);
+
+            LaunchWindow candidate = new LaunchWindow(
+                    source,
+                    destination,
+                    parent,
+                    launchTime,
+                    arrivalTime,
+                    transferTimeSeconds,
+                    sourceLaunchAngle,
+                    expectedArrivalAngle,
+                    destinationArrivalAngle,
+                    phaseError,
+                    absError <= toleranceRad);
+
+            if (absError < bestAbsError) {
+                bestAbsError = absError;
+                best = candidate;
+            }
+
+            if (candidate.isValid()) {
+                return candidate;
+            }
+        }
+
+        return best;
+    }
+
+    public static LaunchWindow refineLaunchWindowAround(
+            Satellite source,
+            Satellite destination,
+            double roughLaunchTimeSeconds) {
+        double refineWindowSeconds = 20.0 * 86_400.0; // 20 days total
+        double searchStepSeconds = 300.0; // 5 minutes
+        double toleranceRad = Math.toRadians(0.25);
+
+        double searchStart = roughLaunchTimeSeconds - refineWindowSeconds * 0.5;
+        double searchEnd = roughLaunchTimeSeconds + refineWindowSeconds * 0.5;
+
+        double transferTimeSeconds = calculateTransferTime(source, destination);
+
+        LaunchWindow best = null;
+        double bestAbsError = Double.MAX_VALUE;
+
+        for (double launchTime = searchStart; launchTime <= searchEnd; launchTime += searchStepSeconds) {
+
+            double arrivalTime = launchTime + transferTimeSeconds;
+
+            double sourceLaunchAngle = source.getOrbitAngleRad(launchTime);
+
+            double expectedArrivalAngle = normalizeAngle(sourceLaunchAngle + Math.PI);
+
+            double destinationArrivalAngle = destination.getOrbitAngleRad(arrivalTime);
+
+            double phaseError = angleDifference(expectedArrivalAngle, destinationArrivalAngle);
+
+            double absError = Math.abs(phaseError);
+
+            LaunchWindow candidate = new LaunchWindow(
+                    source,
+                    destination,
+                    source.getFocalPoint(),
+                    launchTime,
+                    arrivalTime,
+                    transferTimeSeconds,
+                    sourceLaunchAngle,
+                    expectedArrivalAngle,
+                    destinationArrivalAngle,
+                    phaseError,
+                    absError <= toleranceRad);
+
+            if (absError < bestAbsError) {
+                bestAbsError = absError;
+                best = candidate;
+            }
+        }
+
+        return best;
+    }
+
+    public static LaunchWindow findLaunchWindowTwoPass(
+            Satellite source,
+            Satellite destination,
+            double earliestLaunchTimeSeconds) {
+
+        LaunchWindow rough = findLaunchWindowStep(
+                source,
+                destination,
+                earliestLaunchTimeSeconds,
+                86_400.0, // 1 day
+                Math.toRadians(5.0),
+                10.0);
+
+        double refineStart = Math.max(earliestLaunchTimeSeconds, rough.getLaunchTime() - 5.0 * 86_400.0);
+
+        // return findLaunchWindowWithStepForDuration(
+        //         source,
+        //         destination,
+        //         refineStart,
+        //         10.0 * 86_400.0, // search 10 days around rough result
+        //         300.0, // 5 minute step
+        //         Math.toRadians(0.25));
+        return refineLaunchWindowAround(source, destination, rough.getLaunchTime());
+    }
+
+    public static double normalizeAngle(final double angle) {
+        final double twoPi = MathUtils.PI2;
+        double newAngle = angle % twoPi;
+        if (newAngle < 0) {
+            newAngle += twoPi;
+        }
+        return newAngle;
+    }
 
     // public static float expectedArrivalAngle(final CelestialBody source,
     // final float launchTime) {
     // return normalizeAngle(launchTime);
     // }
 
-    // public static float angleDifference(final float angle1, final float angle2) {
-    // float difference = normalizeAngle(angle1 - angle2);
-
-    // if (difference > MathUtils.PI) {
-    // difference -= MathUtils.PI2;
-    // }
-
-    // return difference;
-    // }
+    public static double angleDifference(final double angle1, final double angle2) {
+        double difference = normalizeAngle(angle1 - angle2);
+        if (difference > MathUtils.PI) {
+            difference -= MathUtils.PI2;
+        }
+        return difference;
+    }
 
     // public static HohmannDebugInfo buildHohmannDebugInfo(
     // LaunchWindow window,
