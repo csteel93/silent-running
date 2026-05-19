@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
@@ -27,8 +28,8 @@ public class SpeedButton extends Group {
     private static final String MINUS = "-";
     private static final String MAX = "MAX";
     private static final String TEXTURE = "button.png";
-    private static final int WIDTH = 50;
-    private static final int HEIGHT = 50;
+    private static final int WIDTH = 100;
+    private static final int HEIGHT = 100;
 
     private final TextButton increase;
     private final TextButton decrease;
@@ -63,11 +64,17 @@ public class SpeedButton extends Group {
         addActor(decrease);
     }
 
+      private static BitmapFont customFont(){
+        final BitmapFont font = new BitmapFont();
+        font.getData().setScale(1.75f);
+        return font;
+    }
+
     private Label getSpeedLabel() {
         final Pixmap pixmap = new Pixmap(WIDTH * 2, HEIGHT, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.LIGHT_GRAY);
         pixmap.fillRectangle(0, 0, pixmap.getWidth(), pixmap.getHeight());
-        final LabelStyle style = new LabelStyle(new BitmapFont(), Color.BLACK);
+        final LabelStyle style = new LabelStyle(customFont(), Color.BLACK);
         style.background = new TextureRegionDrawable(new Texture(pixmap));
         final Label label = new Label("0", style);
         label.setPosition(Gdx.graphics.getWidth() - WIDTH * 2.5f - WIDTH * 1.2f, Gdx.graphics.getHeight() - HEIGHT);
@@ -76,7 +83,7 @@ public class SpeedButton extends Group {
     }
 
     private TextButton getButton(final String text, final Drawable drawable) {
-        final TextButtonStyle style = new TextButtonStyle(drawable, drawable, drawable, new BitmapFont());
+        final TextButtonStyle style = new TextButtonStyle(drawable, drawable, drawable, customFont());
         final TextButton textButton = new TextButton(text, style);
         textButton.setSize(WIDTH, HEIGHT);
         textButton.getStyle().fontColor = Color.BLACK;

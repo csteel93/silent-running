@@ -10,8 +10,6 @@ import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
-import com.steel.silent.simulation.snapshot.BodyState;
-import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.ui.SkyMap;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
 
@@ -26,9 +24,9 @@ public class PlanetButtons extends Group {
 
     private static final String TEXTURE = "button.png";
     private static final float PLANET_BUTTON_X = 0f;
-    private static final float PLANET_BUTTON_HEIGHT = 32f;
-    private static final float PLANET_BUTTON_GAP = 6f;
-    private static final float PLANET_BUTTON_TOP_MARGIN = 58f + 50;
+    private static final float PLANET_BUTTON_HEIGHT = 64f;
+    private static final float PLANET_BUTTON_GAP = 12f;
+    private static final float PLANET_BUTTON_TOP_MARGIN = 116f + 100;
 
     public PlanetButtons(final List<ProjectedBody> bodies, final SkyMap map) {
         final Drawable drawable = getDrawable();

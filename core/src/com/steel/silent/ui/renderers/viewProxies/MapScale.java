@@ -12,9 +12,12 @@ import lombok.Getter;
 public class MapScale {
 
     private static final double MAP_FILL = 0.80;
-    private static final double MIN_BODY_RADIUS = 0.01;
-    private static final double MAX_BODY_RADIUS = 480000000.0;
-    private static final double MIN_CHILD_ORBIT_GAP = 8.0;
+    private static final double MIN_BODY_RADIUS = 0.001;
+    private static final double MAX_BODY_RADIUS = 40.0;
+
+    // private static final double MIN_BODY_RADIUS = 1.0;
+    // private static final double MAX_BODY_RADIUS = 20.0;
+    private static final double MIN_CHILD_ORBIT_GAP = 0.08;
 
     private final double centerX;
     private final double centerY;
@@ -33,30 +36,33 @@ public class MapScale {
     }
 
     // public static MapScale fromSnapshot(final SimulationSnapshot snapshot,
-    //         final double mapWidth,
-    //         final double mapHeight,
-    //         final double bodyScale) {
-    //     final double mapRadius = Math.min(mapWidth, mapHeight) * MAP_FILL;
-    //     final double worldRadius = snapshot.bodies().stream()
-    //             .mapToDouble(MapScale::distanceFromOrigin)
-    //             .max()
-    //             .orElse(1.0);
-    //     return new MapScale(
-    //             mapWidth * 0.5,
-    //             mapHeight * 0.5,
-    //             Math.max(1.0, worldRadius / mapRadius),
-    //             bodyScale);
+    // final double mapWidth,
+    // final double mapHeight,
+    // final double bodyScale) {
+    // final double mapRadius = Math.min(mapWidth, mapHeight) * MAP_FILL;
+    // final double worldRadius = snapshot.bodies().stream()
+    // .mapToDouble(MapScale::distanceFromOrigin)
+    // .max()
+    // .orElse(1.0);
+    // return new MapScale(
+    // mapWidth * 0.5,
+    // mapHeight * 0.5,
+    // Math.max(1.0, worldRadius / mapRadius),
+    // bodyScale);
     // }
 
     public static MapScale fromUniverse(final Universe universe,
             final double mapWidth,
             final double mapHeight,
             final double bodyScale) {
-        final double mapRadius = Math.min(mapWidth, mapHeight) * MAP_FILL;
+        final double mapRadius = Math.min(mapWidth, mapHeight) * 0.5 * MAP_FILL;
         final double worldRadius = universe.buildSnapshot().bodies().stream()
                 .mapToDouble(MapScale::distanceFromOrigin)
                 .max()
                 .orElse(1.0);
+        System.out.println("map radius:  " + mapRadius);
+
+        System.out.println("world radius:  " + worldRadius);
         return new MapScale(
                 mapWidth * 0.5,
                 mapHeight * 0.5,
@@ -68,6 +74,10 @@ public class MapScale {
         return new Vector(x(coords.x()), y(coords.y()));
     }
 
+    public double distance(final double meters) {
+        return meters / metersPerMapUnit;
+    }
+
     public double x(final double meters) {
         return centerX + meters / metersPerMapUnit;
     }
@@ -76,48 +86,22 @@ public class MapScale {
         return centerY + meters / metersPerMapUnit;
     }
 
-    // public double x(final Satellite satellite) {
-    // return childCoordinate(satellite, true);
-    // }
-
-    // public double y(final Satellite satellite) {
-    // return childCoordinate(satellite, false);
-    // }
-
     public double radius(final double meters) {
         final double scaledRadius = meters / metersPerMapUnit * bodyScale;
         return Math.max(MIN_BODY_RADIUS, Math.min(MAX_BODY_RADIUS, scaledRadius));
     }
 
+    // public double childOrbitDistance(final double rawDistanceMeters,
+    //         final double parentRadiusMeters,
+    //         final double childRadiusMeters) {
+    //     final double scaledDistance = distance(rawDistanceMeters);
+    //     final double minDistance = radius(parentRadiusMeters)
+    //             + radius(childRadiusMeters)
+    //             + MIN_CHILD_ORBIT_GAP;
+    //     return Math.max(scaledDistance, minDistance);
+    // }
+
     private static double distanceFromOrigin(final BodyState body) {
         return Math.hypot(body.positionMeters().x(), body.positionMeters().y()) + body.radiusMeters();
     }
-
-    // private double childCoordinate(final Satellite satellite, final boolean
-    // xAxis) {
-    // if ("STAR".equals(satellite.getFocalPoint().classification())) {
-    // return xAxis ? x(satellite.initialPositionX()) :
-    // y(satellite.initialPositionY());
-    // }
-
-    // final double parentX = satellite.getFocalPoint().initialPositionX();
-    // final double parentY = satellite.getFocalPoint().initialPositionY();
-    // final double dx = satellite.initialPositionX() - parentX;
-    // final double dy = satellite.initialPositionY() - parentY;
-    // final double realDistance = Math.hypot(dx, dy);
-    // if (realDistance <= 0.0) {
-    // return xAxis ? x(satellite.initialPositionX()) :
-    // y(satellite.initialPositionY());
-    // }
-
-    // final double scaledDistance = realDistance / metersPerMapUnit;
-    // final double minDistance = radius(satellite.getFocalPoint().radiusMeters())
-    // + radius(satellite.radiusMeters())
-    // + MIN_CHILD_ORBIT_GAP;
-    // final double visualDistance = Math.max(scaledDistance, minDistance);
-    // final double parentMapX = x(parentX);
-    // final double parentMapY = y(parentY);
-    // final double offset = (xAxis ? dx : dy) / realDistance * visualDistance;
-    // return (xAxis ? parentMapX : parentMapY) + offset;
-    // }
 }

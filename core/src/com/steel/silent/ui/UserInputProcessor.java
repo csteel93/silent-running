@@ -94,8 +94,8 @@ public class UserInputProcessor implements InputProcessor {
             return false;
         }
         final Vector2 world = screenToWorld(screenX, screenY);
-        System.out.println("screen X: " + screenX + " screen Y: " + screenY );
-        System.out.println(" world X: " + world.x + "  world Y: " + world.y );
+        // System.out.println("screen X: " + screenX + " screen Y: " + screenY );
+        // System.out.println(" world X: " + world.x + "  world Y: " + world.y );
 
         // final Optional<Ship> ship = pickShip(world);
         // if (ship.isPresent()) {

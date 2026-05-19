@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
-import com.steel.silent.entity.Ship;
 import com.steel.silent.math.Vector;
 import com.steel.silent.navigation.HohmannDrawData;
 import com.steel.silent.navigation.LaunchWindow;
@@ -35,7 +34,7 @@ public class UniverseRenderer {
     // private final Map<String, Function<VisibleObject, EntityRenderer>>
     // rendererSupplier;
     // private final List<RendererRule> predicateRenderers = new ArrayList<>();
-    // private final DebugOverlayRenderer debugOverlay;
+    private final DebugOverlayRenderer debugOverlay;
     // private final WhiteCircleRenderer whiteCircleRenderer;
     private final BodyLabelRenderer bodyLabelRenderer;
     private boolean labelsVisible = true;
@@ -47,7 +46,7 @@ public class UniverseRenderer {
             final MapScale mapScale) {
         this.shapeRenderer = shapeRenderer;
         this.mapScale = mapScale;
-        // this.debugOverlay = new DebugOverlayRenderer(universe, shapeRenderer);
+        this.debugOverlay = new DebugOverlayRenderer( shapeRenderer);
         // rendererSupplier = new HashMap<String, Function<VisibleObject,
         // EntityRenderer>>() {
         // {
@@ -81,8 +80,12 @@ public class UniverseRenderer {
             final Matrix4 projection,
             final OrthographicCamera camera) {
 
+        final Map<UUID, BodyState> bodiesById = snapshot.bodiesById();
         final List<ProjectedBody> bodies = snapshot.bodies().stream()
-                .map(body -> new ProjectedBody(body, mapScale))
+                .map(body -> new ProjectedBody(
+                        body,
+                        mapScale,
+                        bodiesById))
                 .toList();
 
         bodies.forEach(body -> {
@@ -94,9 +97,14 @@ public class UniverseRenderer {
         if (labelsVisible) {
             bodyLabelRenderer.render(camera, bodies);
         }
+
+        debugOverlay.render(bodies, projection);
     }
 
     private EntityRenderer createRenderer(final ProjectedBody body) {
+        if ("SHIP".equals(body.classification())) {
+            return new ShipRenderer(shapeRenderer);
+        }
         if ("STAR".equals(body.classification())) {
             return new EntityTextureRenderer(new Texture(Gdx.files.internal("sun.png")));
         }

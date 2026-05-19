@@ -92,7 +92,9 @@ public class BodyLabelRenderer {
     }
 
     private boolean shouldLabel(final ProjectedBody body) {
-        return "PLANET".equals(body.classification()) || "MOON".equals(body.classification());
+        return "PLANET".equals(body.classification())
+                || "MOON".equals(body.classification())
+                || "SHIP".equals(body.classification());
     }
 
     public void dispose() {

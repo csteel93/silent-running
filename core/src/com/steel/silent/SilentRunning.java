@@ -3,7 +3,7 @@ package com.steel.silent;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
-import com.steel.silent.entity.FocalPoint;
+import com.steel.silent.model.body.FocalPoint;
 import com.steel.silent.model.body.Satellite;
 import com.steel.silent.simulation.Simulation;
 import com.steel.silent.simulation.Simulator;
@@ -39,16 +39,29 @@ public class SilentRunning extends ApplicationAdapter {
 
         // Body radii need visual exaggeration; orbital distances are scaled to the map
         // size.
-        double bodyScale = 10.0;
+        double bodyScale = 1.0;
         // 1 real second = 1 simulated day
         double timeScale = 86_400.0;
 
         populateUniverse();
 
-        MapScale mapScale = MapScale.fromUniverse(universe, (double) universe_width, (double) universe_height, bodyScale);
+        MapScale mapScale = MapScale
+                .fromUniverse(universe, (double) universe_width, (double) universe_height, bodyScale);
 
         final List<ProjectedBody> bodies = universe.buildSnapshot().bodies().stream()
                 .map(body -> new ProjectedBody(body, mapScale))
+                .peek(body -> {
+                    System.out.println("= " + body.name());
+                    System.out.println(" - body radius: " + body.radius());
+                    System.out.println(" - pos X:       " + body.x());
+                    System.out.println(" - pos Y:       " + body.y());
+                    // System.out.println(" - influence " + planet.influenceRadius());
+                    // System.out.println(" - orbital radius " + body.r());
+                    // System.out.println(" - orbital period " + orbitalPeriodSeconds + "
+                    // (seconds)");
+                    // System.out.println(" - orbital period " + orbitalPeriodSeconds / 60 / 60 +
+                    // "(hours)");
+                })
                 .toList();
 
         skyMap = new SkyMap(universe_width, universe_height, universe, mapScale);
@@ -101,7 +114,7 @@ public class SilentRunning extends ApplicationAdapter {
 
         // Spawn a debug ship orbiting Phobos; press G in-game to command it.
         // testShip = TestObjects.getTestShip(satellites.get(5));
-        // universe.getShips().add(testShip);
+        // universe.withShip(testShip);
     }
 
 }

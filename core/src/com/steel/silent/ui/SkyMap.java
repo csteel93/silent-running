@@ -9,11 +9,14 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.steel.silent.entity.Ship;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.simulation.snapshot.BodyState;
+import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.ui.handler.KeyHandlerFactory;
 import com.steel.silent.ui.handler.key.ScrollHandler;
 import com.steel.silent.ui.renderers.UniverseRenderer;
 import com.steel.silent.ui.renderers.viewProxies.MapScale;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
+
+import java.util.UUID;
 
 public class SkyMap {
 
@@ -26,6 +29,7 @@ public class SkyMap {
     private final UserInputProcessor inputProcessor;
     private final UniverseRenderer universeRenderer;
     private final Universe universe;
+    private final MapScale mapScale;
 
     // public SkyMap(final float width, final float height, final VisibleUniverse
     // universe) {
@@ -48,10 +52,11 @@ public class SkyMap {
 
     public SkyMap(final float width, final float height, final Universe universe, final MapScale mapScale,
             final UserInputConfigurations uiConfig) {
+        System.out.println("width: " + width + " height: " + height);
         final OrthographicCamera ortho = new OrthographicCamera(width, height);
         ortho.setToOrtho(false, width, height);
         this.camera = ortho;
-        this.viewport = new ExtendViewport(width * 2, height * 2, this.camera);
+        this.viewport = new ExtendViewport(width , height , this.camera);
         this.inputProcessor = new UserInputProcessor(
                 KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig),
                 new ScrollHandler(camera),
@@ -59,6 +64,7 @@ public class SkyMap {
                 viewport,
                 universe);
         this.universe = universe;
+        this.mapScale = mapScale;
 
         this.universeRenderer = new UniverseRenderer(new ShapeRenderer(), mapScale);
     }
@@ -70,6 +76,23 @@ public class SkyMap {
     public void focusOn(final ProjectedBody body) {
         if (body == null)
             return;
+        focusOn(body.id());
+    }
+
+    public void focusOn(final UUID bodyId) {
+        universe.latestSnapshot()
+                .or(() -> java.util.Optional.of(universe.buildSnapshot()))
+                .flatMap(snapshot -> projectedBody(snapshot, bodyId))
+                .ifPresent(this::focusOnProjectedBody);
+    }
+
+    private java.util.Optional<ProjectedBody> projectedBody(final SimulationSnapshot snapshot, final UUID bodyId) {
+        final java.util.Map<UUID, BodyState> bodiesById = snapshot.bodiesById();
+        return java.util.Optional.ofNullable(bodiesById.get(bodyId))
+                .map(body -> new ProjectedBody(body, mapScale, bodiesById));
+    }
+
+    private void focusOnProjectedBody(final ProjectedBody body) {
         camera.position.set((float) body.x(), (float) body.y(), 0f);
         camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, ((float) body.radius()) / ZOOM_MULTIPLIER));
         camera.update();

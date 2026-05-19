@@ -1,7 +1,6 @@
-package com.steel.silent.entity;
+package com.steel.silent.model.body;
 
 import com.steel.silent.math.Vector;
-import com.steel.silent.model.body.CelestialBody;
 
 public class FocalPoint extends CelestialBody {
 

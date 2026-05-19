@@ -1,8 +1,8 @@
 package com.steel.silent.map;
 
-import com.steel.silent.entity.FocalPoint;
 import com.steel.silent.entity.IdentifiableBody;
 import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.FocalPoint;
 import com.steel.silent.model.body.Satellite;
 
 import lombok.Getter;

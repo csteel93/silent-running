@@ -23,7 +23,6 @@ public class Satellite extends CelestialBody {
         super(mu, radiusMeters, initialPositionMeters, initialOrientationRadians, rotationPeriodSeconds);
         this.orbit = orbit;
         this.influenceRadius = calculateInfluenceRadius(orbit, mu);
-        
     }
 
     private double calculateInfluenceRadius(final Orbit orbit, final double mu) {

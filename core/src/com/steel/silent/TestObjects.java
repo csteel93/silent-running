@@ -2,10 +2,10 @@ package com.steel.silent;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
-import com.steel.silent.entity.FocalPoint;
 import com.steel.silent.entity.Ship;
 import com.steel.silent.math.Vector;
 import com.steel.silent.model.body.CelestialBody;
+import com.steel.silent.model.body.FocalPoint;
 import com.steel.silent.model.body.Satellite;
 import com.steel.silent.model.orbit.CircularOrbit;
 import com.steel.silent.model.orbit.Orbit;
@@ -133,16 +133,14 @@ public class TestObjects {
     /**
      * A debug ship that starts in low orbit around the given parent body.
      */
-    // public static Ship getTestShip(final CelestialBody parent) {
-    // final BigDecimal orbitalRadius = parent.artificialSatelliteOrbitRadius();
-    // final BigDecimal periodSeconds = shipOrbitalPeriodSeconds(parent,
-    // orbitalRadius);
-    // final Ship ship = new Ship(parent, bd(1), orbitalRadius, periodSeconds);
-    // ship.getCharacteristics().setColor(Color.WHITE.toString());
-    // ship.getCharacteristics().setName("Wayfarer");
-    // ship.getCharacteristics().setClassification("SHIP");
-    // return ship;
-    // }
+    public static Ship getTestShip(final CelestialBody parent) {
+        final double orbitalRadiusMeters = parent.radiusMeters() + Math.max(1_000.0, parent.radiusMeters() * 0.20);
+        final double orbitalPeriodSeconds = circularOrbitPeriodSeconds(parent, orbitalRadiusMeters);
+        final Ship ship = new Ship(parent, 100.0, orbitalRadiusMeters, orbitalPeriodSeconds);
+        ship.characteristics().setColor(Color.WHITE.toString());
+        ship.characteristics().setName("Wayfarer");
+        return ship;
+    }
 
     // -------------------------------------------------------------------------
     // Private factory helpers
@@ -152,15 +150,11 @@ public class TestObjects {
     // return bd(days * MILLIS_PER_ORBITAL_DAY);
     // }
 
-    // private static BigDecimal shipOrbitalPeriodSeconds(final CelestialBody
-    // parent,
-    // final BigDecimal orbitalRadius) {
-    // final double mu = Math.max(1e-15, parent.getVisualMu());
-    // final double radius = orbitalRadius.doubleValue();
-    // final double periodMs = Math.PI * 2.0 * Math.sqrt(radius * radius * radius /
-    // mu);
-    // return bd(Math.max(30.0, periodMs / 1_000.0));
-    // }
+    private static double circularOrbitPeriodSeconds(final CelestialBody parent,
+            final double orbitalRadiusMeters) {
+        return Math.PI * 2.0 * Math.sqrt(
+                orbitalRadiusMeters * orbitalRadiusMeters * orbitalRadiusMeters / parent.mu());
+    }
 
     private static Satellite planet(final FocalPoint sol,
             final String name,
@@ -182,13 +176,12 @@ public class TestObjects {
         planet.characteristics().setColor(color.toString());
         planet.characteristics().setName(name);
         planet.characteristics().setClassification("PLANET");
-        // System.out.println("= " + name);
-        // System.out.println(" - radius " + radiusMeters);
-        // System.out.println(" - influence " + planet.getInfluenceRadius());
-        // System.out.println(" - orbital " + orbitalRadiusMeters);
-        // System.out.println(" - period " + orbitalPeriodSeconds + " (seconds)");
-        // System.out.println(" - period " + orbitalPeriodSeconds / 60 / 60 + "
-        // (hours)");
+        System.out.println("= " + name);
+        System.out.println(" - body radius    " + radiusMeters);
+        // System.out.println(" - influence      " + planet.influenceRadius());
+        System.out.println(" - orbital radius " + orbitalRadiusMeters);
+        System.out.println(" - orbital period " + orbitalPeriodSeconds + " (seconds)");
+        System.out.println(" - orbital period " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
 
         // System.out.println(planet.name() + " satellite radius: " +
         // planet.artificialSatelliteOrbitRadius());
@@ -230,12 +223,12 @@ public class TestObjects {
         moon.characteristics().setName(name);
         moon.characteristics().setClassification("MOON");
 
-        // System.out.println("= " + name);
-        // System.out.println(" - radius " + radiusMeters);
-        // System.out.println(" - orbital " + orbitalRadiusMeters);
-        // System.out.println(" - period " + orbitalPeriodSeconds + " (seconds)");
-        // System.out.println(" - period " + orbitalPeriodSeconds / 60 / 60 + "
-        // (hours)");
+        System.out.println("= " + name);
+        System.out.println(" - body radius    " + radiusMeters);
+        System.out.println(" - orbital vel " + circularOrbit.periodSeconds());
+        System.out.println(" - orbital radous " + orbitalRadiusMeters);
+        System.out.println(" - orbital period " + orbitalPeriodSeconds + " (seconds)");
+        System.out.println(" - orbital period " + orbitalPeriodSeconds / 60 / 60 + " (hours)");
         return moon;
     }
 }

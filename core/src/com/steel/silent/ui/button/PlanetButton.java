@@ -7,31 +7,41 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.steel.silent.simulation.snapshot.BodyState;
 import com.steel.silent.ui.SkyMap;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBody;
 
+import java.util.UUID;
+
 public class PlanetButton extends TextButton {
-    private static final float PLANET_BUTTON_WIDTH = 70f;
-    private static final float PLANET_BUTTON_HEIGHT = 32f;
+    private static final float PLANET_BUTTON_WIDTH = 140f;
+    private static final float PLANET_BUTTON_HEIGHT = 64f;
 
     public PlanetButton(final ProjectedBody body,
             final Drawable drawable,
             final SkyMap map) {
-        super(body.name(), new TextButtonStyle(drawable, drawable, drawable, new BitmapFont()));
+        super(body.name(), buttonStyle(drawable));
         setSize(PLANET_BUTTON_WIDTH, PLANET_BUTTON_HEIGHT);
         getStyle().fontColor = Color.BLACK;
         setColor(Color.LIGHT_GRAY);
-        addListener(focusListener(body, map));
+        addListener(focusListener(body.id(), body.name(), map));
     }
 
-    private EventListener focusListener(final ProjectedBody body, final SkyMap map) {
+    private static TextButtonStyle buttonStyle(final Drawable drawable) {
+        final BitmapFont font = new BitmapFont();
+        font.getData().setScale(1.75f);
+
+        final TextButtonStyle style = new TextButtonStyle(drawable, drawable, drawable, font);
+        style.fontColor = Color.BLACK;
+        return style;
+    }
+
+    private EventListener focusListener(final UUID bodyId, final String bodyName, final SkyMap map) {
         return new InputListener() {
             @Override
             public boolean touchDown(final InputEvent event, final float x, final float y,
                     final int pointer, final int button) {
-                System.out.println("focusing on " + body.name() + " x: " + body.x() + " y: " + body.y());
-                map.focusOn(body);
+                // System.out.println("focusing on " + bodyName);
+                map.focusOn(bodyId);
                 return true;
             }
         };

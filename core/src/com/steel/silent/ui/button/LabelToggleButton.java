@@ -18,9 +18,9 @@ public class LabelToggleButton extends TextButton {
     private static final String TEXTURE = "button.png";
     private static final String LABELS_ON = "LABELS";
     private static final String LABELS_OFF = "NO LABELS";
-    private static final float X_COORD = 106f;
-    private static final float WIDTH = 104f;
-    private static final float HEIGHT = 50f;
+    private static final float X_COORD = 212f;
+    private static final float WIDTH = 208f;
+    private static final float HEIGHT = 100f;
 
     private final SkyMap map;
 
@@ -29,13 +29,19 @@ public class LabelToggleButton extends TextButton {
     }
 
     public LabelToggleButton(final Drawable drawable, final SkyMap map) {
-        super(LABELS_ON, new TextButtonStyle(drawable, drawable, drawable, new BitmapFont()));
+        super(LABELS_ON, new TextButtonStyle(drawable, drawable, drawable, customFont()));
         this.map = map;
         setPosition(X_COORD, Gdx.graphics.getHeight() - HEIGHT);
         setSize(WIDTH, HEIGHT);
         getStyle().fontColor = Color.BLACK;
         setColor(Color.LIGHT_GRAY);
         addListener(interactionListener());
+    }
+
+     private static BitmapFont customFont(){
+        final BitmapFont font = new BitmapFont();
+        font.getData().setScale(1.75f);
+        return font;
     }
 
     private static Drawable getDrawable() {

@@ -17,10 +17,17 @@ public class CircularOrbit implements Orbit {
     public CircularOrbit(final CelestialBody primary,
             final double radiusMeters,
             final double periodSeconds) {
+        this(primary, radiusMeters, periodSeconds, randomAngle());
+    }
+
+    public CircularOrbit(final CelestialBody primary,
+            final double radiusMeters,
+            final double periodSeconds,
+            final double epochAngleRad) {
         this.primary = primary;
         this.radiusMeters = radiusMeters;
         this.periodSeconds = periodSeconds;
-        this.epochAngleRad = randomAngle();
+        this.epochAngleRad = epochAngleRad;
     }
 
     private static double randomAngle() {

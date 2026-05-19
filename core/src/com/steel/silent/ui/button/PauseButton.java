@@ -19,9 +19,9 @@ public class PauseButton extends TextButton {
     private static final String RESUME = "RESUME";
     private static final String TEXTURE = "button.png";
     private static final float X_COORD = 0;
-    private static final float Y_COORD = Gdx.graphics.getHeight() - 50;
-    private static final float WIDTH = 100;
-    private static final float HEIGHT = 50;
+    private static final float Y_COORD = Gdx.graphics.getHeight() - 100;
+    private static final float WIDTH = 200;
+    private static final float HEIGHT = 100;
     private boolean paused = false;
 
     public PauseButton(final Simulation simulation) {
@@ -29,12 +29,18 @@ public class PauseButton extends TextButton {
     }
 
     public PauseButton(final Drawable drawable, final Simulation simulation) {
-        super(PAUSE, new TextButtonStyle(drawable, drawable, drawable, new BitmapFont()));
+        super(PAUSE, new TextButtonStyle(drawable, drawable, drawable, customFont()));
         setPosition(X_COORD, Y_COORD);
         setSize(WIDTH, HEIGHT);
         getStyle().fontColor = Color.BLACK;
         setColor(Color.LIGHT_GRAY);
         addListener(interactionListener(simulation));
+    }
+
+    private static BitmapFont customFont(){
+        final BitmapFont font = new BitmapFont();
+        font.getData().setScale(1.75f);
+        return font;
     }
 
     private static Drawable getDrawable() {
