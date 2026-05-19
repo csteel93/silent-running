@@ -1,20 +1,18 @@
 package com.steel.silent.entity;
 
-import java.math.BigDecimal;
-
 public interface IdentifiableBody {
 
     String name();
 
     String classification();
 
-    BigDecimal x();
+    double x();
 
-    BigDecimal y();
+    double y();
 
-    BigDecimal aspect();
+    double aspect();
 
-    BigDecimal radius();
+    double radius();
 
     String getColor();
 

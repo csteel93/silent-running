@@ -34,27 +34,27 @@ public class KeyHandlerFactory {
         return new SpaceKeyHandler(camera, viewport);
     }
 
-    public static KeyHandler upKeyHandler(final int panSpeed, final OrthographicCamera camera) {
+    public static KeyHandler upKeyHandler(final float panSpeed, final OrthographicCamera camera) {
         return new ArrowKeyHandler(Input.Keys.UP, camera, ZERO, panSpeed);
     }
 
-    public static KeyHandler downKeyHandler(final int panSpeed, final OrthographicCamera camera) {
+    public static KeyHandler downKeyHandler(final float panSpeed, final OrthographicCamera camera) {
         return new ArrowKeyHandler(Input.Keys.DOWN, camera, ZERO, -panSpeed);
     }
 
-    public static KeyHandler leftKeyHandler(final int panSpeed, final OrthographicCamera camera) {
+    public static KeyHandler leftKeyHandler(final float panSpeed, final OrthographicCamera camera) {
         return new ArrowKeyHandler(Input.Keys.LEFT, camera, -panSpeed, ZERO);
     }
 
-    public static KeyHandler rightKeyHandler(final int panSpeed, final OrthographicCamera camera) {
+    public static KeyHandler rightKeyHandler(final float panSpeed, final OrthographicCamera camera) {
         return new ArrowKeyHandler(Input.Keys.RIGHT, camera, panSpeed, ZERO);
     }
 
-    public static KeyHandler zoomInKeyHandler(final int zoomSpeed, final OrthographicCamera camera) {
+    public static KeyHandler zoomInKeyHandler(final float zoomSpeed, final OrthographicCamera camera) {
         return new ZoomKeyHandler(Input.Keys.EQUALS, camera, -0.01f * zoomSpeed);
     }
 
-    public static KeyHandler zoomOutKeyHandler(final int zoomSpeed, final OrthographicCamera camera) {
+    public static KeyHandler zoomOutKeyHandler(final float zoomSpeed, final OrthographicCamera camera) {
         return new ZoomKeyHandler(Input.Keys.MINUS, camera, 0.01f * zoomSpeed);
     }
 }

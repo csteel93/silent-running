@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ZoomKeyHandler implements KeyHandler {
 
+    private static final float MIN_ZOOM = 0.000001f;
+    private static final float MAX_ZOOM = 5.0f;
+
     private final int keycode;
     private final OrthographicCamera camera;
     private final float zoom;
@@ -22,6 +25,7 @@ public class ZoomKeyHandler implements KeyHandler {
 
     @Override
     public void handleKey() {
-        camera.zoom += zoom;
+        final float zoomDelta = camera.zoom * zoom;
+        camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, camera.zoom + zoomDelta));
     }
 }

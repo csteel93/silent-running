@@ -22,10 +22,10 @@ public class ShipRenderer implements EntityRenderer {
         shapeRenderer.setProjectionMatrix(projection);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(safeColor(ship.getColor()));
-        final float x = ship.x().floatValue();
-        final float y = ship.y().floatValue();
-        final float r = Math.max(1f, ship.radius().floatValue());
-        drawTriangle(x, y, r, FIXED_ORBIT_HEADING);
+        final double x = ship.x();
+        final double y = ship.y();
+        final double r = Math.max(1f, ship.radius());
+        drawTriangle((float) x, (float) y, (float) r, FIXED_ORBIT_HEADING);
         shapeRenderer.end();
     }
 
@@ -42,7 +42,8 @@ public class ShipRenderer implements EntityRenderer {
     }
 
     private Color safeColor(final String color) {
-        if (color == null) return Color.WHITE;
+        if (color == null)
+            return Color.WHITE;
         try {
             return Color.valueOf(color);
         } catch (final Exception e) {

@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UserInputConfigurations {
-    private final int panSpeed;
-    private final int zoomSpeed;
+    private final float panSpeed;
+    private final float zoomSpeed;
 }

@@ -18,6 +18,7 @@ public class DesktopLauncher {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setTitle("Silent Running");
         config.setForegroundFPS(60);
+        config.useVsync(true);
         config.setWindowedMode(UNIVERSE_WIDTH, UNIVERSE_HEIGHT);
         new Lwjgl3Application(new SilentRunning(UNIVERSE_WIDTH*2, UNIVERSE_HEIGHT*2), config);
     }

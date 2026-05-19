@@ -10,8 +10,8 @@ public class ArrowKeyHandler implements KeyHandler {
 
     private final int arrowKey;
     private final OrthographicCamera camera;
-    private final int x;
-    private final int y;
+    private final float x;
+    private final float y;
 
     @Override
     public int getKeycode() {

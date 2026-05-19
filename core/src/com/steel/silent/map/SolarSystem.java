@@ -5,7 +5,8 @@ import com.steel.silent.entity.FocalPoint;
 import com.steel.silent.entity.IdentifiableBody;
 import com.steel.silent.entity.Satellite;
 
-import java.math.BigDecimal;
+import lombok.Getter;
+
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -19,7 +20,11 @@ import java.util.stream.Stream;
 
 public class SolarSystem {
 
+    private static final double MILLIS_PER_SECOND = 1000.0;
+
+    @Getter
     private final FocalPoint focalPoint;
+    @Getter
     private final ConcurrentHashMap<CelestialBody, CopyOnWriteArrayList<Satellite>> satellites = new ConcurrentHashMap<>();
 
     public SolarSystem(final FocalPoint focalPoint) {
@@ -82,14 +87,14 @@ public class SolarSystem {
 
     private void orbit(final Satellite satellite, final long delta, final int speed) {
 
-        final double updated_x_offset = satellite.getOrbitalRadius().doubleValue() * Math.cos(satellite.getRelativeAngle().get().doubleValue());
-        final double updated_y_offset = satellite.getOrbitalRadius().doubleValue() * Math.sin(satellite.getRelativeAngle().get().doubleValue());
+        final double updated_x_offset = satellite.getOrbitalRadius() * Math.cos(satellite.getRelativeAngle().get());
+        final double updated_y_offset = satellite.getOrbitalRadius() * Math.sin(satellite.getRelativeAngle().get());
 
-        final double updated_x = updated_x_offset + satellite.getFocalPoint().getCoordinates().x().doubleValue();
-        final double updated_y = updated_y_offset + satellite.getFocalPoint().getCoordinates().y().doubleValue();
+        final double updated_x = updated_x_offset + satellite.getFocalPoint().getCoordinates().x();
+        final double updated_y = updated_y_offset + satellite.getFocalPoint().getCoordinates().y();
 
-        // Radians travelled per millisecond of simulation time.
-        final long orbitTimeMillis = satellite.getOrbitalSpeed().longValue();
+        // Orbital periods are stored in seconds; simulation deltas arrive in milliseconds.
+        final double orbitTimeMillis = satellite.getOrbitalPeriod() * MILLIS_PER_SECOND;
         if (orbitTimeMillis <= 0) {
             return;
         }
@@ -101,29 +106,28 @@ public class SolarSystem {
         final double sin = Math.sin(radianDelta);
         final double cos = Math.cos(radianDelta);
 
-        final double diff_x = updated_x - satellite.getFocalPoint().getCoordinates().x().doubleValue();
-        final double diff_y = updated_y - satellite.getFocalPoint().getCoordinates().y().doubleValue();
+        final double diff_x = updated_x - satellite.getFocalPoint().getCoordinates().x();
+        final double diff_y = updated_y - satellite.getFocalPoint().getCoordinates().y();
 
         final double x_change = (diff_x * cos) - (diff_y * sin);
         final double y_change = (diff_x * sin) + (diff_y * cos);
 
-        final double new_x = x_change + satellite.getFocalPoint().getCoordinates().x().doubleValue();
-        final double new_y = y_change + satellite.getFocalPoint().getCoordinates().y().doubleValue();
+        final double new_x = x_change + satellite.getFocalPoint().getCoordinates().x();
+        final double new_y = y_change + satellite.getFocalPoint().getCoordinates().y();
 
-        satellite.getCoordinates().update(new BigDecimal(new_x), new BigDecimal(new_y));
-        satellite.getRelativeAngle().getAndAccumulate(BigDecimal.valueOf(radianDelta), BigDecimal::add);
+        satellite.getCoordinates().update(new_x, new_y);
+        satellite.getRelativeAngle().getAndAccumulate(radianDelta, Double::sum);
 
         spin(satellite, delta, speed);
     }
 
     private void spin(final CelestialBody celestialBody, final long delta, final int speed) {
-        if (!celestialBody.getRotationalSpeed().equals(BigDecimal.ZERO)) {
-            final double circumference = 2 * Math.PI * celestialBody.radius().doubleValue();
-            final long rotationTimeMillis = celestialBody.getRotationalSpeed().longValue();
-            final double rotationVelocity = circumference / rotationTimeMillis;
+        if (celestialBody.getRotationalSpeed() != 0d) {
+            final double rotationTimeMillis = celestialBody.getRotationalSpeed() * MILLIS_PER_SECOND;
+            final double rotationVelocity = (2.0 * Math.PI) / rotationTimeMillis;
             final double rotationDelta = rotationVelocity * delta * speed;
-            final double newOrientation = rotationDelta + celestialBody.getCoordinates().o().doubleValue();
-            celestialBody.getCoordinates().setO(BigDecimal.valueOf(newOrientation));
+            final double newOrientation = rotationDelta + celestialBody.getCoordinates().o();
+            celestialBody.getCoordinates().setO(newOrientation);
         }
     }
 }

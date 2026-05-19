@@ -1,10 +1,8 @@
 package com.steel.silent.entity;
 
-import java.math.BigDecimal;
-
 public class FocalPoint extends CelestialBody {
 
-    public FocalPoint(final BigDecimal radius, final BigDecimal xCoord, final BigDecimal yCoord, final BigDecimal rotationSpeed) {
-        super(new Coordinates(xCoord, yCoord), radius, rotationSpeed);
+    public FocalPoint(final double radius, final double xCoord, final double yCoord, final double mu, final double rotationSpeed) {
+        super(new Coordinates(xCoord, yCoord), radius, mu, rotationSpeed);
     }
 }

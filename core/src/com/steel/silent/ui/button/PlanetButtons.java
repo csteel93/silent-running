@@ -10,17 +10,18 @@ import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
-import com.steel.silent.entity.CelestialBody;
-import com.steel.silent.entity.IdentifiableBody;
-import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.SkyMap;
+import com.steel.silent.ui.renderers.viewProxies.VisibleBody;
+import com.steel.silent.ui.renderers.viewProxies.VisibleObject;
+import com.steel.silent.ui.renderers.viewProxies.VisibleUniverse;
 
 public class PlanetButtons extends Group {
     private static final String STAR_CLASSIFICATION = "STAR";
     private static final String PLANET_CLASSIFICATION = "PLANET";
+    private static final String MOON_CLASSIFICATION = "MOON";
     private static final List<String> INTERESTING_CLASSIFICATIONS = Arrays.asList(STAR_CLASSIFICATION,
-            PLANET_CLASSIFICATION);
-    private static Predicate<IdentifiableBody> BODY_OF_INTEREST = body -> body instanceof CelestialBody
+            PLANET_CLASSIFICATION, MOON_CLASSIFICATION);
+    private static Predicate<VisibleObject> BODY_OF_INTEREST = body -> body instanceof VisibleBody
             && INTERESTING_CLASSIFICATIONS.contains(body.classification());
 
     private static final String TEXTURE = "button.png";
@@ -29,13 +30,12 @@ public class PlanetButtons extends Group {
     private static final float PLANET_BUTTON_GAP = 6f;
     private static final float PLANET_BUTTON_TOP_MARGIN = 58f + 50;
 
-    public PlanetButtons(final Universe universe, final SkyMap map) {
-        System.out.println("Generating body zoom buttons");
+    public PlanetButtons(final VisibleUniverse universe, final SkyMap map) {
         final Drawable drawable = getDrawable();
         final int[] index = { 0 };
         universe.getState()
                 .filter(BODY_OF_INTEREST)
-                .map(body -> (CelestialBody) body)
+                .map(body -> (VisibleBody) body)
                 .forEach(body -> {
                     System.out.println("Generating zoom button for " + body.name());
                     final PlanetButton button = new PlanetButton(body, drawable, map);

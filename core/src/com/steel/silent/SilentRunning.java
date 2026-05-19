@@ -5,13 +5,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.steel.silent.entity.FocalPoint;
 import com.steel.silent.entity.Satellite;
-import com.steel.silent.entity.Ship;
 import com.steel.silent.map.SolarSystem;
 import com.steel.silent.simulation.Simulation;
 import com.steel.silent.simulation.Simulator;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.Gui;
 import com.steel.silent.ui.SkyMap;
+import com.steel.silent.ui.renderers.viewProxies.VisibleUniverse;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class SilentRunning extends ApplicationAdapter {
 
     private SkyMap skyMap;
     private Gui gui;
-    private Ship testShip;
+    // private Ship testShip;
 
     public SilentRunning(final float width, final float height) {
         this.universe_width = width;
@@ -35,10 +35,19 @@ public class SilentRunning extends ApplicationAdapter {
 
     @Override
     public void create() {
+
+        // Body radii need visual exaggeration; orbital distances are scaled to the map size.
+        double bodyScale = 10.0;
+        // 1 real second = 1 simulated day
+        double timeScale = 86_400.0;
+
         populateUniverse();
 
-        skyMap = new SkyMap(universe_width, universe_height, universe, testShip);
-        gui = new Gui(universe_width, universe_height, simulation, universe, skyMap);
+        final VisibleUniverse visibleUniverse = VisibleUniverse.fromUniverse(universe, universe_width, universe_height,
+                bodyScale, timeScale);
+
+        skyMap = new SkyMap(universe_width, universe_height, visibleUniverse);
+        gui = new Gui(universe_width, universe_height, simulation, visibleUniverse, skyMap);
 
         System.out.println("beginning rendering");
         skyMap.render();
@@ -86,8 +95,8 @@ public class SilentRunning extends ApplicationAdapter {
         universe.getSolarSystems().add(solarSystem);
 
         // Spawn a debug ship orbiting Phobos; press G in-game to command it.
-        testShip = TestObjects.getTestShip(satellites.get(5));
-        universe.getShips().add(testShip);
+        // testShip = TestObjects.getTestShip(satellites.get(5));
+        // universe.getShips().add(testShip);
     }
 
 }

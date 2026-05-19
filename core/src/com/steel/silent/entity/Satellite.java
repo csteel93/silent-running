@@ -2,38 +2,46 @@ package com.steel.silent.entity;
 
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Satellite extends CelestialBody {
 
     @Getter
     private final CelestialBody focalPoint;
+    // orbital radius meters
     @Getter
-    private final BigDecimal orbitalRadius;
+    private final double orbitalRadius;
+    // orbital period in seconds
     @Getter
-    private final BigDecimal orbitalSpeed;
+    private final double orbitalPeriod;
+
     @Getter
-    private final AtomicReference<BigDecimal> relativeAngle;
+    private final double influenceRadius;
+
+    @Getter
+    private final AtomicReference<Double> relativeAngle;
 
     public Satellite(final CelestialBody focalPoint,
-                     final BigDecimal radius,
-                     final BigDecimal orbitalRadius,
-                     final BigDecimal orbitalSpeed) {
-        this(focalPoint, radius, orbitalRadius, orbitalSpeed, BigDecimal.ZERO, randomAngle());
+            final double radius,
+            final double orbitalRadius,
+            final double orbitalPeriod,
+            final double mu) {
+        this(focalPoint, radius, orbitalRadius, orbitalPeriod, mu, 0d, randomAngle());
     }
 
     public Satellite(final CelestialBody focalPoint,
-                     final BigDecimal radius,
-                     final BigDecimal orbitalRadius,
-                     final BigDecimal orbitalSpeed,
-                     final BigDecimal rotationSpeed,
-                     final double angle) {
-        super(initializeCoordinates(focalPoint, orbitalRadius, angle), radius, rotationSpeed);
+            final double radius,
+            final double orbitalRadius,
+            final double orbitalPeriod,
+            final double mu,
+            final double rotationSpeed,
+            final double angle) {
+        super(initializeCoordinates(focalPoint, orbitalRadius, angle), radius, mu, rotationSpeed);
         this.focalPoint = focalPoint;
         this.orbitalRadius = orbitalRadius;
-        this.orbitalSpeed = orbitalSpeed;
-        this.relativeAngle = new AtomicReference<>(BigDecimal.valueOf(angle));
+        this.orbitalPeriod = orbitalPeriod;
+        this.relativeAngle = new AtomicReference<>(angle);
+        this.influenceRadius = orbitalRadius * Math.pow(mu / focalPoint.getMu(), 2.0 / 5.0);
     }
 
     private static double randomAngle() {
@@ -41,12 +49,13 @@ public class Satellite extends CelestialBody {
     }
 
     private static Coordinates initializeCoordinates(final CelestialBody focalPoint,
-                                                     final BigDecimal orbitalRadius,
-                                                     final double angle) {
-        final BigDecimal xOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.cos(angle)));
-        final BigDecimal yOffset = orbitalRadius.multiply(BigDecimal.valueOf(Math.sin(angle)));
-        final BigDecimal xCoord = xOffset.add(focalPoint.getCoordinates().x());
-        final BigDecimal yCoord = yOffset.add(focalPoint.getCoordinates().y());
+            final double orbitalRadius,
+            final double angle) {
+        final double xOffset = orbitalRadius * Math.cos(angle);
+        final double yOffset = orbitalRadius * Math.sin(angle);
+        final double xCoord = xOffset + focalPoint.getCoordinates().x();
+        final double yCoord = yOffset + focalPoint.getCoordinates().y();
         return new Coordinates(xCoord, yCoord);
     }
+
 }
