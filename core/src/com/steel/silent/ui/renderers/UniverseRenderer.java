@@ -17,28 +17,32 @@ import java.util.UUID;
 
 public class UniverseRenderer {
 
+    /** Hide moons when the viewport is wider than this many metres. */
+    private static final double MOON_GATE_METERS_PER_PIXEL = 1e8;
+
     private final ShapeRenderer shapeRenderer;
-    private final WorldProjection worldProjection;
     private final Map<UUID, EntityRenderer> entityRenderers = new HashMap<>();
     private final DebugOverlayRenderer debugOverlay;
     private final BodyLabelRenderer bodyLabelRenderer;
     private boolean labelsVisible = true;
 
-    public UniverseRenderer(final ShapeRenderer shapeRenderer,
-            final WorldProjection projection) {
+    public UniverseRenderer(final ShapeRenderer shapeRenderer) {
         this.shapeRenderer = shapeRenderer;
-        this.worldProjection = projection;
         this.debugOverlay = new DebugOverlayRenderer(shapeRenderer);
         this.bodyLabelRenderer = new BodyLabelRenderer(shapeRenderer);
     }
 
     public void render(final SimulationSnapshot snapshot,
             final Matrix4 projection,
-            final OrthographicCamera camera) {
+            final OrthographicCamera camera,
+            final WorldProjection worldProjection) {
 
-        final Map<UUID, BodyState> bodiesById = snapshot.bodiesById();
+        final boolean showMoons = worldProjection.metersPerPixel() <= MOON_GATE_METERS_PER_PIXEL;
+
         final List<ProjectedBodyState> bodies = snapshot.bodies().stream()
-                .map(body -> new ProjectedBodyState(body, worldProjection, bodiesById))
+                .filter(body -> showMoons || !"MOON".equals(body.classification()))
+                .filter(body -> isVisible(body, camera, worldProjection))
+                .map(body -> new ProjectedBodyState(body, worldProjection))
                 .toList();
 
         bodies.forEach(body -> {
@@ -56,6 +60,16 @@ public class UniverseRenderer {
         debugOverlay.renderDebugRings(bodies, projection, camera);
     }
 
+    private boolean isVisible(final BodyState body,
+            final OrthographicCamera camera,
+            final WorldProjection proj) {
+        final float relX = proj.relX(body.positionMeters().x());
+        final float relY = proj.relY(body.positionMeters().y());
+        // Use the rendered radius (already clamped to ≥3 px) as the cull sphere.
+        final float cullRadius = proj.renderRadiusMeters(body.radiusMeters());
+        return camera.frustum.sphereInFrustum(relX, relY, 0f, cullRadius);
+    }
+
     private EntityRenderer createRenderer(final ProjectedBodyState body) {
         if ("SHIP".equals(body.classification())) {
             return new ShipRenderer(shapeRenderer);
@@ -66,7 +80,7 @@ public class UniverseRenderer {
         if ("Earth".equals(body.name())) {
             return new EntityTextureRenderer(new Texture(Gdx.files.internal("earth.png")));
         }
-        return new DefaultEntityRenderer(shapeRenderer);
+        return new CircleBodyRenderer(shapeRenderer);
     }
 
     public void dispose() {

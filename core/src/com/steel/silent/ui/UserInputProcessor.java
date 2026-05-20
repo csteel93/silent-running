@@ -1,51 +1,34 @@
 package com.steel.silent.ui;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.steel.silent.simulation.Universe;
 import com.steel.silent.ui.handler.key.KeyHandler;
-import com.steel.silent.ui.handler.key.ScrollHandler;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-
-import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("SuspiciousNameCombination")
 public class UserInputProcessor implements InputProcessor {
+
+    private static final double SCROLL_ZOOM_FACTOR = 1.15;
 
     private final Map<Integer, KeyHandler> keyHandlers;
     private final Set<Integer> pressedKeys = new HashSet<>();
-    private final Queue<ImmutablePair<Float, Float>> scrolls = new ArrayDeque<>();
-    private final ScrollHandler scrollHandler;
-    private final OrthographicCamera camera;
-    private final ExtendViewport viewport;
-    private final Universe universe;
+    private final SolarCamera solarCamera;
+
+    private boolean dragging = false;
+    private float lastDragX;
+    private float lastDragY;
 
     public UserInputProcessor(final List<KeyHandler> keyHandlers,
-                              final ScrollHandler scrollHandler) {
-        this(keyHandlers, scrollHandler, null, null, null);
-    }
-
-    public UserInputProcessor(final List<KeyHandler> keyHandlers,
-                              final ScrollHandler scrollHandler,
-                              final OrthographicCamera camera,
-                              final ExtendViewport viewport,
-                              final Universe universe) {
+                              final SolarCamera solarCamera) {
         this.keyHandlers = keyHandlers.stream()
-            .collect(Collectors.toMap(KeyHandler::getKeycode, Function.identity()));
-        this.scrollHandler = scrollHandler;
-        this.camera = camera;
-        this.viewport = viewport;
-        this.universe = universe;
+                .collect(Collectors.toMap(KeyHandler::getKeycode, Function.identity()));
+        this.solarCamera = solarCamera;
     }
 
     public void handleInput() {
@@ -56,14 +39,12 @@ public class UserInputProcessor implements InputProcessor {
                 pressedKeys.remove(keycode);
             }
         });
-        Optional.ofNullable(scrolls.poll())
-            .ifPresent(poll -> scrollHandler.scroll(poll.getLeft(), -poll.getRight()));
     }
 
     @Override
     public boolean keyDown(final int keycode) {
         Optional.ofNullable(keyHandlers.get(keycode))
-            .ifPresent(keyHandler -> pressedKeys.add(keyHandler.getKeycode()));
+                .ifPresent(h -> pressedKeys.add(h.getKeycode()));
         return true;
     }
 
@@ -80,16 +61,30 @@ public class UserInputProcessor implements InputProcessor {
 
     @Override
     public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
+        if (button == Input.Buttons.LEFT) {
+            dragging = true;
+            lastDragX = screenX;
+            lastDragY = screenY;
+        }
         return false;
     }
 
     @Override
     public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
+        if (button == Input.Buttons.LEFT) {
+            dragging = false;
+        }
         return false;
     }
 
     @Override
     public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
+        if (dragging) {
+            solarCamera.panByPixels(screenX - lastDragX, screenY - lastDragY);
+            lastDragX = screenX;
+            lastDragY = screenY;
+            return true;
+        }
         return false;
     }
 
@@ -100,8 +95,11 @@ public class UserInputProcessor implements InputProcessor {
 
     @Override
     public boolean scrolled(final float amountX, final float amountY) {
-        scrolls.add(ImmutablePair.of(amountX, amountY));
+        // amountY > 0 = wheel down = zoom out; amountY < 0 = wheel up = zoom in
+        final double factor = Math.pow(SCROLL_ZOOM_FACTOR, amountY);
+        final int mx = com.badlogic.gdx.Gdx.input.getX();
+        final int my = com.badlogic.gdx.Gdx.input.getY();
+        solarCamera.zoomToward(mx, my, factor);
         return true;
     }
-
 }

@@ -1,94 +1,67 @@
 package com.steel.silent.ui.renderers.viewProxies;
 
-import com.steel.silent.simulation.snapshot.BodyState;
-import com.steel.silent.simulation.snapshot.SimulationSnapshot;
-
 /**
- * Converts SI-unit simulation positions and radii into map-space coordinates
- * for rendering. Orbital distances are scaled uniformly to fit the visible
- * map area; body radii are independently exaggerated for legibility since
- * physically honest sizes are sub-pixel at solar-system scale.
+ * Projects SI-unit simulation positions into camera-relative rendering space.
  *
- * <p>All methods that accept meters return map-space units. The map origin
- * (0, 0) in simulation space maps to ({@code centerX}, {@code centerY}).</p>
+ * <p>The camera is always placed at the origin of the rendering coordinate
+ * system. Each body's position is expressed as a <em>relative offset</em>
+ * (in meters) from the camera centre. The offset is computed in double
+ * precision and only cast to float at the last moment, keeping full
+ * accuracy even when the camera is deep inside the solar system.</p>
+ *
+ * <p>Rendering coordinates passed to {@link com.badlogic.gdx.graphics.glutils.ShapeRenderer}
+ * are in meters; the LibGDX camera's {@code zoom} is set to
+ * {@code metersPerPixel} so that 1 m in render-space = 1/metersPerPixel
+ * pixels on screen.</p>
  */
 public class WorldProjection {
 
-    private final double centerX;
-    private final double centerY;
-    private final double metersPerMapUnit;
-    private final ProjectionScale scale;
+    private static final float MIN_SCREEN_RADIUS_PX = 3f;
 
-    private WorldProjection(final double centerX,
-            final double centerY,
-            final double metersPerMapUnit,
-            final ProjectionScale scale) {
-        this.centerX = centerX;
-        this.centerY = centerY;
-        this.metersPerMapUnit = metersPerMapUnit;
-        this.scale = scale;
+    private final double cameraX;        // world metres
+    private final double cameraY;        // world metres
+    private final double metersPerPixel; // camera.zoom value
+
+    public WorldProjection(final double cameraX,
+            final double cameraY,
+            final double metersPerPixel) {
+        this.cameraX = cameraX;
+        this.cameraY = cameraY;
+        this.metersPerPixel = metersPerPixel;
+    }
+
+    /** Body centre expressed as a camera-relative offset in metres. */
+    public float relX(final double positionMeters) {
+        return (float) (positionMeters - cameraX);
+    }
+
+    /** Body centre expressed as a camera-relative offset in metres. */
+    public float relY(final double positionMeters) {
+        return (float) (positionMeters - cameraY);
     }
 
     /**
-     * Builds a projection that fits all body positions from {@code snapshot}
-     * into a map of the given pixel dimensions.
+     * Rendered radius in metres for the ShapeRenderer. Enforces the
+     * {@link #MIN_SCREEN_RADIUS_PX} floor so no body disappears at low zoom.
      */
-    public static WorldProjection fromSnapshot(final SimulationSnapshot snapshot,
-            final double mapWidth,
-            final double mapHeight) {
-        return fromSnapshot(snapshot, mapWidth, mapHeight, ProjectionScale.DEFAULT);
+    public float renderRadiusMeters(final double radiusMeters) {
+        return (float) Math.max(MIN_SCREEN_RADIUS_PX * metersPerPixel, radiusMeters);
     }
 
-    public static WorldProjection fromSnapshot(final SimulationSnapshot snapshot,
-            final double mapWidth,
-            final double mapHeight,
-            final ProjectionScale scale) {
-        final double mapRadius = Math.min(mapWidth, mapHeight) * 0.5 * scale.mapFill();
-        final double worldRadius = snapshot.bodies().stream()
-                .mapToDouble(WorldProjection::distanceFromOrigin)
-                .max()
-                .orElse(1.0);
-        return new WorldProjection(
-                mapWidth * 0.5,
-                mapHeight * 0.5,
-                Math.max(1.0, worldRadius / mapRadius),
-                scale);
+    /** Converts a metre value to screen pixels at the current zoom. */
+    public float metersToPixels(final double meters) {
+        return (float) (meters / metersPerPixel);
     }
 
-    /** Projects the x-component of a simulation position (meters) to map units. */
-    public double x(final double positionMeters) {
-        return centerX + positionMeters / metersPerMapUnit;
+    public double metersPerPixel() {
+        return metersPerPixel;
     }
 
-    /** Projects the y-component of a simulation position (meters) to map units. */
-    public double y(final double positionMeters) {
-        return centerY + positionMeters / metersPerMapUnit;
+    public double cameraX() {
+        return cameraX;
     }
 
-    /**
-     * Projects a distance (meters) to map units without adding the map center
-     * offset. Use for orbit radii, influence rings, and gap calculations.
-     */
-    public double worldDistance(final double meters) {
-        return meters / metersPerMapUnit;
-    }
-
-    /**
-     * Projects a body radius (meters) to a visually exaggerated map-unit
-     * radius. The result is clamped by {@link ProjectionScale} so every body remains visible and no single
-     * body dominates the view.
-     *
-     * <p>Intentional exaggeration: {@link ProjectionScale#bodyExaggeration()}
-     * is typically above 1×
-     * so planets subtend several map units instead of fractions of a pixel.
-     * This is a display-only transform; simulation values are unchanged.</p>
-     */
-    public double bodyRadius(final double radiusMeters) {
-        final double scaled = radiusMeters / metersPerMapUnit * scale.bodyExaggeration();
-        return Math.max(scale.minBodyRadius(), Math.min(scale.maxBodyRadius(), scaled));
-    }
-
-    private static double distanceFromOrigin(final BodyState body) {
-        return Math.hypot(body.positionMeters().x(), body.positionMeters().y()) + body.radiusMeters();
+    public double cameraY() {
+        return cameraY;
     }
 }

@@ -77,12 +77,13 @@ public class BodyLabelRenderer {
     private LabelBounds labelBounds(final OrthographicCamera camera, final ProjectedBodyState body) {
         layout.setText(font, body.name());
 
-        screenPosition.set((float) body.x(), (float) body.y(), 0f);
+        screenPosition.set(body.x(), body.y(), 0f);
         camera.project(screenPosition);
 
         final float paddingX = PADDING_X;
         final float paddingY = PADDING_Y;
-        final float screenRadius = (float) Math.max(3.0, body.radius() / Math.max(0.002f, camera.zoom));
+        // body.radiusPixels() is already clamped to ≥3px by WorldProjection.
+        final float screenRadius = body.radiusPixels();
         final float width = layout.width + paddingX * 2f;
         final float height = layout.height + paddingY * 2f;
         final float x = screenPosition.x - width * 0.5f;

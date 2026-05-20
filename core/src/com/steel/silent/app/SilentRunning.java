@@ -12,8 +12,8 @@ import com.steel.silent.simulation.Universe;
 import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.ui.Gui;
 import com.steel.silent.ui.SkyMap;
+import com.steel.silent.ui.SolarCamera;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
-import com.steel.silent.ui.renderers.viewProxies.ProjectionScale;
 import com.steel.silent.ui.renderers.viewProxies.WorldProjection;
 
 import java.util.List;
@@ -40,14 +40,16 @@ public class SilentRunning extends ApplicationAdapter {
         populateUniverse();
 
         final SimulationSnapshot initialSnapshot = universe.buildSnapshot();
-        final WorldProjection projection = WorldProjection.fromSnapshot(
-                initialSnapshot, universeWidth, universeHeight, ProjectionScale.DEFAULT);
 
+        // Build an initial projection (camera at origin, default zoom) solely to
+        // populate the Gui's planet-button list with names and IDs.
+        final WorldProjection initialProjection = new SolarCamera(universeWidth, universeHeight)
+                .buildProjection();
         final List<ProjectedBodyState> bodies = initialSnapshot.bodies().stream()
-                .map(body -> new ProjectedBodyState(body, projection))
+                .map(body -> new ProjectedBodyState(body, initialProjection))
                 .toList();
 
-        skyMap = new SkyMap(universeWidth, universeHeight, universe, projection);
+        skyMap = new SkyMap(universeWidth, universeHeight, universe);
         gui = new Gui(universeWidth, universeHeight, simulation, bodies, skyMap);
 
         skyMap.render();

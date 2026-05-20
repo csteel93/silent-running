@@ -4,60 +4,48 @@ import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.input.GestureDetector;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.steel.silent.debug.SimulationSnapshotWriter;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.steel.silent.simulation.Universe;
 import com.steel.silent.simulation.snapshot.BodyState;
-import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.ui.handler.KeyHandlerFactory;
-import com.steel.silent.ui.handler.key.ScrollHandler;
 import com.steel.silent.ui.renderers.UniverseRenderer;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 import com.steel.silent.ui.renderers.viewProxies.WorldProjection;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 public class SkyMap {
 
-    private static final float ZOOM_MULTIPLIER = 500f;
-    private static final float MIN_ZOOM = 0.002f;
-    private static final float MAX_ZOOM = 0.45f;
-
     private final OrthographicCamera camera;
-    private final ExtendViewport viewport;
+    private final ScreenViewport viewport;
+    private final SolarCamera solarCamera;
     private final UserInputProcessor inputProcessor;
     private final UniverseRenderer universeRenderer;
     private final Universe universe;
-    private final WorldProjection worldProjection;
-    private final SimulationSnapshotWriter snapshotWriter = new SimulationSnapshotWriter();
 
-    public SkyMap(final float width, final float height, final Universe universe,
-            final WorldProjection worldProjection) {
-        this(width, height, universe, worldProjection, new UserInputConfigurations(3, 5f));
+    public SkyMap(final float width, final float height, final Universe universe) {
+        this(width, height, universe, new UserInputConfigurations(20, 5f));
     }
 
-    public SkyMap(final float width, final float height, final Universe universe,
-            final WorldProjection worldProjection,
-            final UserInputConfigurations uiConfig) {
-        final OrthographicCamera ortho = new OrthographicCamera(width, height);
-        ortho.setToOrtho(false, width, height);
-        this.camera = ortho;
-        this.viewport = new ExtendViewport(width, height, this.camera);
+    public SkyMap(final float width, final float height,
+                  final Universe universe,
+                  final UserInputConfigurations uiConfig) {
+        this.camera = new OrthographicCamera(width, height);
+        this.viewport = new ScreenViewport(camera);
+        this.solarCamera = new SolarCamera(width, height);
         this.inputProcessor = new UserInputProcessor(
-                KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig),
-                new ScrollHandler(camera),
-                camera,
-                viewport,
-                universe);
+                KeyHandlerFactory.getKeyHandlers(camera, viewport, uiConfig, solarCamera),
+                solarCamera);
         this.universe = universe;
-        this.worldProjection = worldProjection;
-        this.universeRenderer = new UniverseRenderer(new ShapeRenderer(), worldProjection);
+        this.universeRenderer = new UniverseRenderer(new ShapeRenderer());
     }
 
     public void registerInput(final InputMultiplexer multiplexer) {
+        multiplexer.addProcessor(new GestureDetector(new PinchZoomListener()));
         multiplexer.addProcessor(inputProcessor);
     }
 
@@ -69,36 +57,32 @@ public class SkyMap {
     public void focusOn(final UUID bodyId) {
         universe.latestSnapshot()
                 .or(() -> Optional.of(universe.buildSnapshot()))
-                .flatMap(snapshot -> projectedBody(snapshot, bodyId))
-                .ifPresent(this::focusOnProjectedBody);
+                .flatMap(snapshot -> Optional.ofNullable(snapshot.bodiesById().get(bodyId)))
+                .ifPresent(this::focusOnBody);
     }
 
-    private Optional<ProjectedBodyState> projectedBody(final SimulationSnapshot snapshot, final UUID bodyId) {
-        final Map<UUID, BodyState> bodiesById = snapshot.bodiesById();
-        return Optional.ofNullable(snapshot.bodiesById().get(bodyId))
-                .map(body -> new ProjectedBodyState(body, worldProjection, bodiesById));
-    }
-
-    private void focusOnProjectedBody(final ProjectedBodyState body) {
-        camera.position.set((float) body.x(), (float) body.y(), 0f);
-        camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, (float) body.radius() / ZOOM_MULTIPLIER));
-        camera.update();
+    private void focusOnBody(final BodyState body) {
+        solarCamera.focusOn(
+                body.positionMeters().x(),
+                body.positionMeters().y(),
+                body.influenceRadius());
     }
 
     public void render() {
         inputProcessor.handleInput();
-        camera.update();
+        solarCamera.applyTo(camera);
         viewport.apply();
         ScreenUtils.clear(Color.BLACK);
-        universe.latestSnapshot()
-                .ifPresent(snapshot -> {
-                    universeRenderer.render(snapshot, camera.combined, camera);
-                    snapshotWriter.writeIfDue(snapshot, System.currentTimeMillis(), worldProjection);
-                });
+
+        universe.latestSnapshot().ifPresent(snapshot -> {
+            final WorldProjection projection = solarCamera.buildProjection();
+            universeRenderer.render(snapshot, camera.combined, camera, projection);
+        });
     }
 
     public void update(final int width, final int height) {
         viewport.update(width, height, false);
+        solarCamera.resize(width, height);
     }
 
     public void dispose() {
@@ -111,5 +95,43 @@ public class SkyMap {
 
     public void setLabelsVisible(final boolean labelsVisible) {
         universeRenderer.setLabelsVisible(labelsVisible);
+    }
+
+    // ── Pinch-to-zoom (mobile) ────────────────────────────────────────────────
+
+    private class PinchZoomListener extends GestureDetector.GestureAdapter {
+
+        private float lastPinchDistance = 0f;
+
+        @Override
+        public boolean zoom(final float initialDistance, final float distance) {
+            // Incremental factor from previous call to avoid accumulation error.
+            if (lastPinchDistance > 0f && distance > 0f) {
+                final double factor = lastPinchDistance / distance;
+                // Zoom toward the viewport centre (no midpoint available here).
+                solarCamera.zoomAtCenter(factor);
+            }
+            lastPinchDistance = distance;
+            return true;
+        }
+
+        @Override
+        public boolean pinch(final Vector2 ip1, final Vector2 ip2,
+                             final Vector2 p1, final Vector2 p2) {
+            final float currentDist = p1.dst(p2);
+            if (lastPinchDistance > 0f && currentDist > 0f) {
+                final double factor = lastPinchDistance / currentDist;
+                final float midX = (p1.x + p2.x) * 0.5f;
+                final float midY = (p1.y + p2.y) * 0.5f;
+                solarCamera.zoomToward(midX, midY, factor);
+            }
+            lastPinchDistance = currentDist;
+            return true;
+        }
+
+        @Override
+        public void pinchStop() {
+            lastPinchDistance = 0f;
+        }
     }
 }

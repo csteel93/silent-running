@@ -1,30 +1,36 @@
 package com.steel.silent.ui.renderers.viewProxies;
 
-import java.util.Map;
 import java.util.UUID;
 
-import com.steel.silent.math.Vector;
 import com.steel.silent.simulation.snapshot.BodyState;
 
 /**
- * A read-only view of a single body's simulation state projected into map
- * space. All coordinate and radius values are in map units, not meters.
- * Callers should never cache instances across render frames.
+ * A read-only view of a single body's simulation state projected into
+ * camera-relative rendering space.
+ *
+ * <p>All coordinate values ({@link #x()}, {@link #y()}) are metre offsets
+ * from the camera centre, computed in double precision and stored as
+ * float. {@link #radius()} is the rendered radius in those same metre
+ * units, already clamped to a minimum of 3 screen pixels.
+ * {@link #radiusPixels()} is the screen-pixel equivalent, useful for
+ * deciding segment counts and frustum tests.</p>
+ *
+ * <p>Callers should never cache instances across render frames.</p>
  */
 public class ProjectedBodyState {
 
     private final BodyState body;
-    private final WorldProjection projection;
+    private final float relX;
+    private final float relY;
+    private final float renderRadiusMeters;
+    private final float renderRadiusPixels;
 
     public ProjectedBodyState(final BodyState body, final WorldProjection projection) {
-        this(body, projection, Map.of());
-    }
-
-    public ProjectedBodyState(final BodyState body,
-            final WorldProjection projection,
-            final Map<UUID, BodyState> bodiesById) {
         this.body = body;
-        this.projection = projection;
+        this.relX = projection.relX(body.positionMeters().x());
+        this.relY = projection.relY(body.positionMeters().y());
+        this.renderRadiusMeters = projection.renderRadiusMeters(body.radiusMeters());
+        this.renderRadiusPixels = projection.metersToPixels(renderRadiusMeters);
     }
 
     public UUID id() {
@@ -39,59 +45,56 @@ public class ProjectedBodyState {
         return body.classification();
     }
 
-    /** Map-space x coordinate of this body's centre. */
-    public double x() {
-        return projectedPosition().x();
+    public String color() {
+        return body.color();
     }
 
-    /** Map-space y coordinate of this body's centre. */
-    public double y() {
-        return projectedPosition().y();
+    /** Camera-relative X position in metres (pass directly to ShapeRenderer). */
+    public float x() {
+        return relX;
     }
 
-    /**
-     * Visually exaggerated map-space radius (display only; clamped to a
-     * minimum so every body remains selectable).
-     */
-    public double radius() {
-        return projection.bodyRadius(body.radiusMeters());
+    /** Camera-relative Y position in metres (pass directly to ShapeRenderer). */
+    public float y() {
+        return relY;
     }
 
     /**
-     * Map-space radius of the body's gravitational influence sphere, projected
-     * as a true distance (no body exaggeration applied).
+     * Rendered radius in metres (pass directly to ShapeRenderer). Already
+     * enforces the 3-pixel minimum floor from {@link WorldProjection}.
      */
-    public double getInfluenceRadius() {
-        return projection.worldDistance(body.influenceRadius());
+    public float radius() {
+        return renderRadiusMeters;
     }
 
     /**
-     * Map-space radius of the close-approach encounter zone. Kept at 20 % of
-     * the influence sphere so it stays inside and doesn't overlap sibling orbits.
+     * Rendered radius in screen pixels. Use this for segment-count decisions,
+     * frustum-radius tests, and label positioning — not for ShapeRenderer calls.
      */
-    public double getEncounterRadius() {
-        return getInfluenceRadius() * 0.20;
+    public float radiusPixels() {
+        return renderRadiusPixels;
+    }
+
+    /**
+     * Influence-sphere radius in metres (raw, not camera-relative). Pass
+     * directly to a ShapeRenderer already centred at {@link #x()}, {@link #y()}.
+     */
+    public float getInfluenceRadius() {
+        return (float) body.influenceRadius();
+    }
+
+    /**
+     * Close-approach encounter zone radius (20 % of influence sphere), in metres.
+     */
+    public float getEncounterRadius() {
+        return (float) (body.influenceRadius() * 0.20);
     }
 
     public double orientationRad() {
         return body.orientationRad();
     }
 
-    public String color() {
-        return body.color();
-    }
-
     public BodyState bodyState() {
         return body;
-    }
-
-    private Vector projectedPosition() {
-        return rawProjectedPosition(body);
-    }
-
-    private Vector rawProjectedPosition(final BodyState state) {
-        return new Vector(
-                projection.x(state.positionMeters().x()),
-                projection.y(state.positionMeters().y()));
     }
 }

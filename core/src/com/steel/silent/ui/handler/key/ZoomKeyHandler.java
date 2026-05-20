@@ -1,17 +1,15 @@
 package com.steel.silent.ui.handler.key;
 
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.steel.silent.ui.SolarCamera;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class ZoomKeyHandler implements KeyHandler {
 
-    private static final float MIN_ZOOM = 0.000001f;
-    private static final float MAX_ZOOM = 5.0f;
-
     private final int keycode;
-    private final OrthographicCamera camera;
-    private final float zoom;
+    private final SolarCamera solarCamera;
+    /** Zoom factor per key-repeat. Values < 1 zoom in; values > 1 zoom out. */
+    private final double factor;
 
     @Override
     public int getKeycode() {
@@ -25,7 +23,6 @@ public class ZoomKeyHandler implements KeyHandler {
 
     @Override
     public void handleKey() {
-        final float zoomDelta = camera.zoom * zoom;
-        camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, camera.zoom + zoomDelta));
+        solarCamera.zoomAtCenter(factor);
     }
 }

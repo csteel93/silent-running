@@ -1,17 +1,16 @@
 package com.steel.silent.ui.handler.key;
 
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.steel.silent.ui.SolarCamera;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class ArrowKeyHandler implements KeyHandler {
 
-    private static final int ZERO = 0;
-
     private final int arrowKey;
-    private final OrthographicCamera camera;
-    private final float x;
-    private final float y;
+    private final SolarCamera solarCamera;
+    /** Pan amount in screen pixels per key-repeat tick. */
+    private final float dx;
+    private final float dy;
 
     @Override
     public int getKeycode() {
@@ -25,6 +24,6 @@ public class ArrowKeyHandler implements KeyHandler {
 
     @Override
     public void handleKey() {
-        camera.translate(x, y, ZERO);
+        solarCamera.panByPixels(dx, dy);
     }
 }

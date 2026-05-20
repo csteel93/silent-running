@@ -97,7 +97,7 @@ public class SimulationSnapshotWriter {
         markdown.append("| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n");
 
         snapshot.bodies().stream()
-                .map(body -> new ProjectedBodyState(body, projection, bodiesById))
+                .map(body -> new ProjectedBodyState(body, projection))
                 .forEach(projectedBody -> appendProjectedBodyRow(markdown, projectedBody));
         return markdown.toString();
     }
