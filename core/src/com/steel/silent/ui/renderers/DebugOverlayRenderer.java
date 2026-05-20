@@ -52,7 +52,7 @@ public final class DebugOverlayRenderer {
     }
 
     private boolean shouldDrawInfluenceRadius(final ProjectedBodyState body) {
-        return !"STAR".equals(body.classification());
+        return !"STAR".equals(body.classification()) && !"SHIP".equals(body.classification());
     }
 
     private void drawCircle(final float cx, final float cy, final float r, final Color color) {

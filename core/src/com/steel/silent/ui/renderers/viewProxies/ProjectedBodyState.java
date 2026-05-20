@@ -106,12 +106,23 @@ public class ProjectedBodyState {
 
         final Vector primaryPosition = rawProjectedPosition(primary);
         final Vector direction = rawOffset.nor();
-        final double visualDistance = projection.childOrbitDistance(
+        final double visualDistance = visualDistanceFromPrimary(rawDistanceMeters, primary);
+
+        return primaryPosition.add(direction.scl(visualDistance));
+    }
+
+    private double visualDistanceFromPrimary(final double rawDistanceMeters, final BodyState primary) {
+        if ("SHIP".equals(body.classification())) {
+            return projection.shipOrbitDistance(
+                    rawDistanceMeters,
+                    primary.radiusMeters(),
+                    primary.influenceRadius(),
+                    body.radiusMeters());
+        }
+        return projection.childOrbitDistance(
                 rawDistanceMeters,
                 primary.radiusMeters(),
                 body.radiusMeters());
-
-        return primaryPosition.add(direction.scl(visualDistance));
     }
 
     private Vector rawProjectedPosition(final BodyState state) {

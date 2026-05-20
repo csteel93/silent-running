@@ -14,61 +14,36 @@ import com.steel.silent.simulation.snapshot.SimulationSnapshot;
  */
 public class WorldProjection {
 
-    /** Fraction of the map radius used by the furthest body's orbit. */
-    private static final double MAP_FILL = 0.80;
-
-    /**
-     * Minimum visual body radius in map units. Keeps sub-km moons (Phobos,
-     * Deimos) visible as selectable dots in the solar overview even when
-     * their true projected size is well below 1 pixel.
-     */
-    private static final double MIN_BODY_RADIUS = 0.2;
-
-    /**
-     * Maximum visual body radius in map units. Prevents the Sun from
-     * dominating the view when body exaggeration is large.
-     */
-    private static final double MAX_BODY_RADIUS = 20.0;
-
-    /**
-     * Display-only spacing for child orbits. Natural moon distances are often
-     * too small to read once the full solar system is fit into the map, so
-     * child systems get a local readability floor without changing their
-     * simulation positions.
-     */
-    private static final double CHILD_ORBIT_GAP = 12.0;
-    private static final double CHILD_ORBIT_LOG_SPACING = 14.0;
-    private static final double MIN_INFLUENCE_RADIUS_GAP = 3.0;
-    private static final double INFLUENCE_RADIUS_LOG_SPACING = 8.0;
-
     private final double centerX;
     private final double centerY;
     private final double metersPerMapUnit;
-    private final double bodyExaggeration;
+    private final ProjectionScale scale;
 
     private WorldProjection(final double centerX,
             final double centerY,
             final double metersPerMapUnit,
-            final double bodyExaggeration) {
+            final ProjectionScale scale) {
         this.centerX = centerX;
         this.centerY = centerY;
         this.metersPerMapUnit = metersPerMapUnit;
-        this.bodyExaggeration = bodyExaggeration;
+        this.scale = scale;
     }
 
     /**
      * Builds a projection that fits all body positions from {@code snapshot}
      * into a map of the given pixel dimensions.
-     *
-     * @param bodyExaggeration multiplier applied to physical body radii.
-     *   Values around 200 make inner planets visible without zoom;
-     *   the result is clamped to [{@value #MIN_BODY_RADIUS}, {@value #MAX_BODY_RADIUS}].
      */
     public static WorldProjection fromSnapshot(final SimulationSnapshot snapshot,
             final double mapWidth,
+            final double mapHeight) {
+        return fromSnapshot(snapshot, mapWidth, mapHeight, ProjectionScale.DEFAULT);
+    }
+
+    public static WorldProjection fromSnapshot(final SimulationSnapshot snapshot,
+            final double mapWidth,
             final double mapHeight,
-            final double bodyExaggeration) {
-        final double mapRadius = Math.min(mapWidth, mapHeight) * 0.5 * MAP_FILL;
+            final ProjectionScale scale) {
+        final double mapRadius = Math.min(mapWidth, mapHeight) * 0.5 * scale.mapFill();
         final double worldRadius = snapshot.bodies().stream()
                 .mapToDouble(WorldProjection::distanceFromOrigin)
                 .max()
@@ -77,7 +52,7 @@ public class WorldProjection {
                 mapWidth * 0.5,
                 mapHeight * 0.5,
                 Math.max(1.0, worldRadius / mapRadius),
-                bodyExaggeration);
+                scale);
     }
 
     /** Projects the x-component of a simulation position (meters) to map units. */
@@ -107,8 +82,8 @@ public class WorldProjection {
         final double parentRelativeDistance = rawDistanceMeters / Math.max(1.0, parentRadiusMeters);
         final double readableDistance = parentVisualRadius
                 + childVisualRadius
-                + CHILD_ORBIT_GAP
-                + Math.log10(parentRelativeDistance + 1.0) * CHILD_ORBIT_LOG_SPACING;
+                + scale.childOrbitGap()
+                + Math.log10(parentRelativeDistance + 1.0) * scale.childOrbitLogSpacing();
         return Math.max(physicalDistance, readableDistance);
     }
 
@@ -116,24 +91,37 @@ public class WorldProjection {
         final double physicalRadius = worldDistance(influenceRadiusMeters);
         final double relativeInfluence = influenceRadiusMeters / Math.max(1.0, bodyRadiusMeters);
         final double readableRadius = bodyRadius(bodyRadiusMeters)
-                + MIN_INFLUENCE_RADIUS_GAP
-                + Math.log10(Math.max(1.0, relativeInfluence)) * INFLUENCE_RADIUS_LOG_SPACING;
+                + scale.minInfluenceRadiusGap()
+                + Math.log10(Math.max(1.0, relativeInfluence)) * scale.influenceRadiusLogSpacing();
         return Math.max(physicalRadius, readableRadius);
+    }
+
+    public double shipOrbitDistance(final double rawDistanceMeters,
+            final double parentRadiusMeters,
+            final double parentInfluenceRadiusMeters,
+            final double shipRadiusMeters) {
+        final double physicalDistance = worldDistance(rawDistanceMeters);
+        final double readableDistance = bodyRadius(parentRadiusMeters)
+                + bodyRadius(shipRadiusMeters)
+                + scale.shipOrbitGap();
+        final double influenceLimit = influenceRadius(parentInfluenceRadiusMeters, parentRadiusMeters)
+                * scale.shipOrbitInfluenceFill();
+        return Math.min(Math.max(physicalDistance, readableDistance), influenceLimit);
     }
 
     /**
      * Projects a body radius (meters) to a visually exaggerated map-unit
-     * radius. The result is clamped to [{@value #MIN_BODY_RADIUS},
-     * {@value #MAX_BODY_RADIUS}] so every body remains visible and no single
+     * radius. The result is clamped by {@link ProjectionScale} so every body remains visible and no single
      * body dominates the view.
      *
-     * <p>Intentional exaggeration: {@code bodyExaggeration} is typically 60×
+     * <p>Intentional exaggeration: {@link ProjectionScale#bodyExaggeration()}
+     * is typically above 1×
      * so planets subtend several map units instead of fractions of a pixel.
      * This is a display-only transform; simulation values are unchanged.</p>
      */
     public double bodyRadius(final double radiusMeters) {
-        final double scaled = radiusMeters / metersPerMapUnit * bodyExaggeration;
-        return Math.max(MIN_BODY_RADIUS, Math.min(MAX_BODY_RADIUS, scaled));
+        final double scaled = radiusMeters / metersPerMapUnit * scale.bodyExaggeration();
+        return Math.max(scale.minBodyRadius(), Math.min(scale.maxBodyRadius(), scaled));
     }
 
     private static double distanceFromOrigin(final BodyState body) {

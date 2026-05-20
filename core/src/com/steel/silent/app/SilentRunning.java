@@ -13,6 +13,7 @@ import com.steel.silent.simulation.snapshot.SimulationSnapshot;
 import com.steel.silent.ui.Gui;
 import com.steel.silent.ui.SkyMap;
 import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
+import com.steel.silent.ui.renderers.viewProxies.ProjectionScale;
 import com.steel.silent.ui.renderers.viewProxies.WorldProjection;
 
 import java.util.List;
@@ -36,14 +37,11 @@ public class SilentRunning extends ApplicationAdapter {
 
     @Override
     public void create() {
-        // Body radii need visual exaggeration; orbital distances are scaled to the map size.
-        final double bodyExaggeration = 60.0;
-
         populateUniverse();
 
         final SimulationSnapshot initialSnapshot = universe.buildSnapshot();
         final WorldProjection projection = WorldProjection.fromSnapshot(
-                initialSnapshot, universeWidth, universeHeight, bodyExaggeration);
+                initialSnapshot, universeWidth, universeHeight, ProjectionScale.DEFAULT);
 
         final List<ProjectedBodyState> bodies = initialSnapshot.bodies().stream()
                 .map(body -> new ProjectedBodyState(body, projection))
@@ -88,5 +86,10 @@ public class SilentRunning extends ApplicationAdapter {
         final SolarSystem solarSystem = new SolarSystem(sol);
         solarSystem.withSatellites(satellites);
         universe.withSolarSystem(solarSystem);
+        satellites.stream()
+                .filter(body -> "Phobos".equals(body.name()))
+                .findFirst()
+                .map(DemoUniverseFactory::getTestShip)
+                .ifPresent(universe::withShip);
     }
 }
