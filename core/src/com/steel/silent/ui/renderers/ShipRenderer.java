@@ -17,7 +17,7 @@ public class ShipRenderer implements EntityRenderer {
     public void render(final ProjectedBodyState body, final Matrix4 projection) {
         final float x = (float) body.x();
         final float y = (float) body.y();
-        final float size = Math.max(1f, (float) body.radius() * 2f);
+        final float size = Math.max(0.00015f, (float) body.radius() * 0.25f);
         final float heading = (float) body.orientationRad();
 
         shapeRenderer.setProjectionMatrix(projection);

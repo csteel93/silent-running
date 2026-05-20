@@ -188,7 +188,7 @@ public class SimulationSnapshotWriter {
     }
 
     private String formatDecimal(final double value) {
-        return String.format(Locale.US, "%,.3f", value);
+        return String.format(Locale.US, "%,.7f", value);
     }
 
     private String escapeMarkdown(final String value) {

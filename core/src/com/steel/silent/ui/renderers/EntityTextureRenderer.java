@@ -13,6 +13,7 @@ public class EntityTextureRenderer implements EntityRenderer {
     private final Sprite sprite;
 
     public EntityTextureRenderer(final Texture texture) {
+        texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         this.batch = new SpriteBatch();
         this.sprite = new Sprite(texture);
     }

@@ -67,27 +67,42 @@ public class DemoUniverseFactory {
                 4.2828375816e13,
                 59_355_036.22176,
                 88_642.7);
+        // final Satellite phobos = moon(mars, "Phobos",
+        // Color.GRAY,
+        // 1.108e4,
+        // 9.375e6,
+        // 7.087e5,
+        // 27_535.68,
+        // 27_535.68);
+        // final Satellite deimos = moon(mars, "Deimos",
+        // Color.DARK_GRAY,
+        // 6.2e3,
+        // 2.3457e7,
+        // 9.62e4,
+        // 109_080.0,
+        // 109_080.0);
         final Satellite phobos = moon(mars, "Phobos",
                 Color.GRAY,
-                1.108e4,
-                9.375e6,
-                7.087e5,
-                27_535.68,
-                27_535.68);
+                1.108e5, // gameplay radius: 10x real Phobos radius
+                5.0e7, // gameplay orbital radius: 50,000 km
+                7.087e8, // gameplay mu: 1000x real
+                114_525.0, // orbital period from Mars mu at 5.0e7 m, ~31.8 h
+                27_535.68); // keep real-ish rotation period
+
         final Satellite deimos = moon(mars, "Deimos",
                 Color.DARK_GRAY,
-                6.2e3,
-                2.3457e7,
-                9.62e4,
-                109_080.0,
-                109_080.0);
+                6.2e4, // gameplay radius: 10x real Deimos radius
+                1.25e8, // gameplay orbital radius: 125,000 km
+                9.62e7, // gameplay mu: 1000x real
+                452_707.0, // orbital period from Mars mu at 1.25e8 m, ~125.8 h
+                109_080.0); // keep real-ish rotation period
 
         return Arrays.asList(mercury, venus, earth, moon, mars, phobos, deimos);
     }
 
     /** A debug ship starting in low orbit around the given parent body. */
     public static Ship getTestShip(final CelestialBody parent) {
-        final double orbitalRadiusMeters = parent.radiusMeters() + Math.max(1_000.0, parent.radiusMeters() * 0.20);
+        final double orbitalRadiusMeters = parent.radiusMeters() + Math.max(1_000.0, parent.radiusMeters() * 100.0);
         final double orbitalPeriodSeconds = circularOrbitPeriodSeconds(parent, orbitalRadiusMeters);
         final Ship ship = new Ship(parent, 100.0, orbitalRadiusMeters, orbitalPeriodSeconds);
         ship.characteristics().setColor(Color.WHITE.toString());

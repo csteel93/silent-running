@@ -21,54 +21,16 @@ package com.steel.silent.ui.renderers.viewProxies;
  *   this if large planets or the star should feel more massive when zoomed
  *   out. Decrease it if large bodies dominate the view or cover nearby orbit
  *   context.
- * @param childOrbitGap minimum display-space gap between a child body and its
- *   primary after both bodies' rendered radii are considered. Increase this
- *   to push moons farther away from their planets. Decrease it to keep moons
- *   closer to the primary and more tightly clustered.
- * @param childOrbitLogSpacing extra child-orbit spacing based on the physical
- *   orbit radius relative to the primary radius. Increase this to preserve
- *   more visible separation between close and far moons, such as Phobos and
- *   Deimos. Decrease it to make child systems more compact and less spread
- *   by their physical distance ratios.
- * @param minInfluenceRadiusGap minimum display-space gap between a body edge
- *   and its influence ring. Increase this if influence rings are too close to
- *   body sprites or hard to see. Decrease it if influence rings feel too
- *   inflated around bodies with small or placeholder influence values.
- * @param influenceRadiusLogSpacing extra influence-ring radius based on the
- *   physical influence-radius-to-body-radius ratio. Increase this to make
- *   meaningful influence differences more obvious, especially for moons.
- *   Decrease it if influence rings become too large or visually overpower the
- *   local system.
- * @param shipOrbitGap minimum display-space gap between a ship and its
- *   primary after rendered radii are considered. Increase this to keep ships
- *   from sitting visually on top of small bodies. Decrease it to make ships
- *   appear closer to their parent body.
- * @param shipOrbitInfluenceFill maximum fraction of the primary body's
- *   projected influence radius that a ship orbit may occupy. Increase this to
- *   allow ships to render farther from the primary while still staying inside
- *   the influence ring. Decrease it to pull ships closer toward the primary.
  */
 public record ProjectionScale(
         double mapFill,
         double bodyExaggeration,
         double minBodyRadius,
-        double maxBodyRadius,
-        double childOrbitGap,
-        double childOrbitLogSpacing,
-        double minInfluenceRadiusGap,
-        double influenceRadiusLogSpacing,
-        double shipOrbitGap,
-        double shipOrbitInfluenceFill) {
+        double maxBodyRadius) {
 
     public static final ProjectionScale DEFAULT = new ProjectionScale(
             0.80,
-            60.0,
-            0.2,
-            20.0,
-            12.0,
-            14.0,
-            3.0,
-            8.0,
-            0.5,
-            0.70);
+            1.0,
+            0.00000001,
+            20.0);
 }

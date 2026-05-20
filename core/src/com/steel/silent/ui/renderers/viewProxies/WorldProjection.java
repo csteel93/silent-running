@@ -73,42 +73,6 @@ public class WorldProjection {
         return meters / metersPerMapUnit;
     }
 
-    public double childOrbitDistance(final double rawDistanceMeters,
-            final double parentRadiusMeters,
-            final double childRadiusMeters) {
-        final double physicalDistance = worldDistance(rawDistanceMeters);
-        final double parentVisualRadius = bodyRadius(parentRadiusMeters);
-        final double childVisualRadius = bodyRadius(childRadiusMeters);
-        final double parentRelativeDistance = rawDistanceMeters / Math.max(1.0, parentRadiusMeters);
-        final double readableDistance = parentVisualRadius
-                + childVisualRadius
-                + scale.childOrbitGap()
-                + Math.log10(parentRelativeDistance + 1.0) * scale.childOrbitLogSpacing();
-        return Math.max(physicalDistance, readableDistance);
-    }
-
-    public double influenceRadius(final double influenceRadiusMeters, final double bodyRadiusMeters) {
-        final double physicalRadius = worldDistance(influenceRadiusMeters);
-        final double relativeInfluence = influenceRadiusMeters / Math.max(1.0, bodyRadiusMeters);
-        final double readableRadius = bodyRadius(bodyRadiusMeters)
-                + scale.minInfluenceRadiusGap()
-                + Math.log10(Math.max(1.0, relativeInfluence)) * scale.influenceRadiusLogSpacing();
-        return Math.max(physicalRadius, readableRadius);
-    }
-
-    public double shipOrbitDistance(final double rawDistanceMeters,
-            final double parentRadiusMeters,
-            final double parentInfluenceRadiusMeters,
-            final double shipRadiusMeters) {
-        final double physicalDistance = worldDistance(rawDistanceMeters);
-        final double readableDistance = bodyRadius(parentRadiusMeters)
-                + bodyRadius(shipRadiusMeters)
-                + scale.shipOrbitGap();
-        final double influenceLimit = influenceRadius(parentInfluenceRadiusMeters, parentRadiusMeters)
-                * scale.shipOrbitInfluenceFill();
-        return Math.min(Math.max(physicalDistance, readableDistance), influenceLimit);
-    }
-
     /**
      * Projects a body radius (meters) to a visually exaggerated map-unit
      * radius. The result is clamped by {@link ProjectionScale} so every body remains visible and no single

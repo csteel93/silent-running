@@ -11,7 +11,7 @@ import com.steel.silent.ui.renderers.viewProxies.ProjectedBodyState;
 
 public class DefaultEntityRenderer implements EntityRenderer {
 
-    private static final int CIRCLE_TEXTURE_SIZE = 512;
+    private static final int CIRCLE_TEXTURE_SIZE = 1024;
 
     private final SpriteBatch batch;
     private final Sprite sprite;
@@ -26,7 +26,7 @@ public class DefaultEntityRenderer implements EntityRenderer {
         final float x = (float) body.x();
         final float y = (float) body.y();
         final float radius = (float) body.radius();
-        final float diameter = Math.max(0.01f, radius * 2f);
+        final float diameter = Math.max(0.0001f, radius * 2f);
 
         sprite.setColor(Color.valueOf(body.color()));
         sprite.setSize(diameter, diameter);

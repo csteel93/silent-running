@@ -47,13 +47,13 @@ public class UniverseRenderer {
             renderer.render(body, projection);
         });
 
-        debugOverlay.renderInfluenceRadii(bodies, projection);
+        debugOverlay.renderInfluenceRadii(bodies, projection, camera);
 
         if (labelsVisible) {
             bodyLabelRenderer.render(camera, bodies);
         }
 
-        debugOverlay.renderDebugRings(bodies, projection);
+        debugOverlay.renderDebugRings(bodies, projection, camera);
     }
 
     private EntityRenderer createRenderer(final ProjectedBodyState body) {
